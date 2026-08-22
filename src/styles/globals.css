@@ -1,0 +1,210 @@
+@import 'bootstrap/dist/css/bootstrap.min.css';
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  --primary-green: #0A6836;
+  --primary-green-dark: #064E28;
+  --secondary-green: #2D7A4D;
+  --leaf-green: #4CAF50;
+  --accent-orange: #FF6F00;
+  --accent-hover: #E66000;
+  --discount-red: #E53935;
+  --bg-cream: #F7FAF7;
+  --bg-card: #FFFFFF;
+  --text-dark: #1A2E26;
+  --text-muted: #64748B;
+  --border-light: rgba(10, 104, 54, 0.08);
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg-cream);
+  color: var(--text-dark);
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6, .font-heading {
+  font-family: var(--font-heading);
+  color: var(--text-dark);
+  font-weight: 700;
+}
+
+/* Top Announcement Bar */
+.top-bar-v2 {
+  background: #064E28;
+  color: #FFFFFF;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 6px 0;
+}
+
+/* Header Navbar */
+.glass-header-v2 {
+  background: #FFFFFF;
+  border-bottom: 1px solid rgba(10, 104, 54, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.all-categories-btn {
+  background: #0A6836;
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.all-categories-btn:hover {
+  background: #064E28;
+  color: #FFFFFF;
+}
+
+.nav-link-v2 {
+  color: #2D3E36;
+  font-weight: 600;
+  font-size: 0.92rem;
+  padding: 6px 14px;
+  border-radius: 50px;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.nav-link-v2:hover, .nav-link-v2.active {
+  color: #0A6836;
+  background: #EEF6F1;
+}
+
+/* Circular Category Halo Cards */
+.category-halo-card {
+  text-align: center;
+  transition: all 0.35s cubic-bezier(0.165, 0.84, 0.44, 1);
+  cursor: pointer;
+}
+
+.category-halo-card:hover {
+  transform: translateY(-6px);
+}
+
+.halo-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  margin: 0 auto 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+}
+
+.category-halo-card:hover .halo-circle {
+  transform: scale(1.06);
+  box-shadow: 0 12px 30px rgba(10, 104, 54, 0.15);
+}
+
+.halo-bg-1 { background: radial-gradient(circle, #E8F5EE 0%, #D2EBDD 100%); border: 2px solid #C2E4D2; }
+.halo-bg-2 { background: radial-gradient(circle, #FFF4E6 0%, #FFE3C6 100%); border: 2px solid #FDD3A6; }
+.halo-bg-3 { background: radial-gradient(circle, #E6F7F7 0%, #C9EAEA 100%); border: 2px solid #B4E1E1; }
+.halo-bg-4 { background: radial-gradient(circle, #F4F8E4 0%, #E2ECBC 100%); border: 2px solid #D6E4A2; }
+.halo-bg-5 { background: radial-gradient(circle, #FCE8EE 0%, #F8CAD8 100%); border: 2px solid #F3B5C7; }
+.halo-bg-6 { background: radial-gradient(circle, #FFF8DC 0%, #FFEFA6 100%); border: 2px solid #FFE680; }
+
+/* Product Card */
+.product-card-v2 {
+  background: #FFFFFF;
+  border-radius: 20px;
+  border: 1px solid rgba(10, 104, 54, 0.08);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.03);
+  transition: all 0.35s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.product-card-v2:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 16px 40px rgba(10, 104, 54, 0.12);
+  border-color: rgba(10, 104, 54, 0.25);
+}
+
+.badge-discount-v2 {
+  background: #E53935;
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 0.72rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.badge-40-off-grand {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: #0A6836;
+  color: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  box-shadow: 0 10px 30px rgba(10, 104, 54, 0.4);
+  border: 4px solid #FFFFFF;
+}
+
+/* Glowing Ring around Flash Basket */
+.glowing-ring {
+  box-shadow: 0 0 40px rgba(76, 175, 80, 0.6), 0 0 80px rgba(76, 175, 80, 0.3);
+  border-radius: 50%;
+}
+
+/* Carousel Control Arrows */
+.carousel-arrow {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  color: #1C2B22;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  border: 1px solid rgba(0,0,0,0.06);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.carousel-arrow:hover {
+  background: #0A6836;
+  color: #FFFFFF;
+  transform: scale(1.08);
+}
+
+/* Toast */
+.toast-freshvana {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  background: #0A6836;
+  color: #FFFFFF;
+  padding: 14px 24px;
+  border-radius: 50px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-backdrop-blur {
+  background: rgba(12, 38, 25, 0.65);
+  backdrop-filter: blur(8px);
+}

@@ -48,9 +48,9 @@ export const CategoryGrid: React.FC = () => {
     <section className="py-5 bg-white" id="categories">
       <div className="container py-3">
         {/* Section Header */}
-        <div className="d-flex flex-column flex-sm-row align-items-sm-end justify-content-between mb-4 pb-2">
+        <div className="d-flex flex-column flex-sm-row align-items-center align-items-sm-end justify-content-between mb-4 pb-2 text-center text-sm-start">
           <div>
-            <h3 className="font-heading display-6 fw-extrabold text-dark mb-1 d-flex align-items-center gap-2">
+            <h3 className="font-heading display-6 fw-extrabold text-dark mb-1 d-inline-flex align-items-center justify-content-center gap-2">
               <span>Shop By</span>
               <span style={{ color: '#0A6836' }}>Category</span>
               <Leaf size={24} className="text-success" />
@@ -58,7 +58,7 @@ export const CategoryGrid: React.FC = () => {
             <p className="text-muted small mb-0">Explore our wide range of fresh and healthy organic produce</p>
           </div>
 
-          <div className="d-flex align-items-center gap-2 mt-3 mt-sm-0">
+          <div className="d-flex align-items-center justify-content-center gap-2 mt-3 mt-sm-0">
             <button
               onClick={() => scroll('left')}
               className="btn btn-light rounded-circle p-2 shadow-sm border"
@@ -90,20 +90,20 @@ export const CategoryGrid: React.FC = () => {
           ref={scrollRef}
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
-          className="d-flex gap-4 overflow-auto pb-3 pt-2 scrollbar-none snap-x"
+          className="d-flex gap-3 gap-md-4 overflow-auto pb-3 pt-2 px-2 scrollbar-none snap-x"
           style={{ scrollBehavior: 'smooth', msOverflowStyle: 'none', scrollbarWidth: 'none' }}
         >
           {categories.map((cat, idx) => (
             <div
               key={cat.id}
               className="flex-shrink-0"
-              style={{ width: '165px' }}
+              style={{ width: '150px' }}
             >
               <motion.div
                 whileHover={{ y: -8, scale: 1.03 }}
                 transition={{ duration: 0.25 }}
                 onClick={() => handleCategoryClick(cat.id)}
-                className="category-halo-card cursor-pointer p-2 rounded-4"
+                className="category-halo-card cursor-pointer p-2 rounded-4 text-center d-flex flex-column align-items-center"
                 style={{ cursor: 'pointer' }}
               >
                 {/* Halo Circle Container */}
@@ -119,7 +119,7 @@ export const CategoryGrid: React.FC = () => {
                   </div>
                 </div>
 
-                <h6 className="font-heading fw-bold mb-1 text-dark text-center" style={{ fontSize: '0.95rem' }}>
+                <h6 className="font-heading fw-bold mb-1 text-dark text-center" style={{ fontSize: '0.92rem' }}>
                   {cat.name}
                 </h6>
                 <span className="small text-muted d-block text-center" style={{ fontSize: '0.78rem' }}>

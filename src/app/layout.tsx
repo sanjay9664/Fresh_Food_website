@@ -10,6 +10,7 @@ import { WishlistProvider } from '@/context/WishlistContext';
 import { QuickViewProvider, useQuickView } from '@/context/QuickViewContext';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
+import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import { CartDrawer } from '@/components/cart/CartDrawer';
 import { SearchModal } from '@/components/search/SearchModal';
 import { Toast } from '@/components/ui/Toast';
@@ -26,10 +27,15 @@ function MainApp({ children }: { children: React.ReactNode }) {
       {/* Hide Navbar on Login Page */}
       {!isLoginPage && <Navbar onOpenSearch={() => setIsSearchOpen(true)} />}
 
-      <main style={{ minHeight: isLoginPage ? '100vh' : '80vh' }}>{children}</main>
+      <main className={!isLoginPage ? "pb-5 pb-md-0 mb-4 mb-md-0" : ""} style={{ minHeight: isLoginPage ? '100vh' : '80vh' }}>
+        {children}
+      </main>
 
       {/* Hide Footer on Login Page */}
       {!isLoginPage && <Footer />}
+
+      {/* Mobile App Style Bottom Navigation Bar */}
+      {!isLoginPage && <MobileBottomNav onOpenSearch={() => setIsSearchOpen(true)} />}
 
       {!isLoginPage && <CartDrawer />}
 

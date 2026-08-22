@@ -55,6 +55,7 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   background: #FFFFFF;
   border-bottom: 1px solid rgba(10, 104, 54, 0.08);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  top: 30px;
 }
 
 .all-categories-btn {
@@ -91,6 +92,16 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   background: #EEF6F1;
 }
 
+/* Hero Carousel Responsive Heights & Spacing */
+.hero-carousel-section {
+  padding-top: 155px;
+  padding-bottom: 25px;
+}
+
+.hero-image-container {
+  height: 340px;
+}
+
 /* Circular Category Halo Cards */
 .category-halo-card {
   text-align: center;
@@ -114,7 +125,6 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 
 .halo-circle:hover {
   box-shadow: 0 12px 30px rgba(10, 104, 54, 0.25);
-
 }
 
 .halo-bg-1 { background: radial-gradient(circle, #E8F5E9 0%, #C8E6C9 100%); }
@@ -169,6 +179,15 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   animation: floatFast 3s ease-in-out infinite;
 }
 
+/* Scrollbar Hide Helper */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Responsive Utilities for Mobile & Tablet */
 @media (max-width: 991.98px) {
   .top-bar-v2 {
@@ -180,8 +199,13 @@ h1, h2, h3, h4, h5, h6, .font-heading {
     top: 26px !important;
   }
 
-  .mobile-hero-padding {
-    padding-top: 135px !important;
+  .hero-carousel-section {
+    padding-top: 120px !important;
+    padding-bottom: 20px !important;
+  }
+
+  .hero-image-container {
+    height: 280px !important;
   }
 
   .font-heading.display-4, .font-heading.display-5 {
@@ -202,11 +226,16 @@ h1, h2, h3, h4, h5, h6, .font-heading {
     top: 24px !important;
   }
 
-  .mobile-hero-padding {
-    padding-top: 130px !important;
+  .hero-carousel-section {
+    padding-top: 92px !important;
+    padding-bottom: 15px !important;
+  }
+
+  .hero-image-container {
+    height: 210px !important;
   }
 
   .brand-text {
-    font-size: 1.4rem !important;
+    font-size: 1.3rem !important;
   }
 }

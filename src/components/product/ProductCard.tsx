@@ -91,18 +91,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
       </div>
 
       {/* Card Content */}
-      <div className="d-flex flex-column flex-grow-1 justify-content-between">
+      <div className="d-flex flex-column flex-grow-1 justify-content-between text-center">
         <div>
           {/* Title */}
           <h6
-            className="font-heading text-dark fw-bold mb-1 text-truncate hover-text-success"
+            className="font-heading text-dark fw-bold mb-1 text-truncate hover-text-success text-center"
             style={{ fontSize: '0.95rem' }}
           >
             {product.name}
           </h6>
 
           {/* Weight Unit Selector Pills */}
-          <div className="d-flex align-items-center gap-1 mb-2 py-1 flex-wrap">
+          <div className="d-flex align-items-center justify-content-center gap-1 mb-2 py-1 flex-wrap">
             {product.weights.map((w) => (
               <button
                 key={w}
@@ -124,7 +124,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
           </div>
 
           {/* Rating */}
-          <div className="d-flex align-items-center gap-1 text-warning mb-2" style={{ fontSize: '0.75rem' }}>
+          <div className="d-flex align-items-center justify-content-center gap-1 text-warning mb-2" style={{ fontSize: '0.75rem' }}>
             {[1, 2, 3, 4, 5].map((s) => (
               <Star key={s} size={11} fill="#FFB800" stroke="none" />
             ))}
@@ -132,7 +132,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
           </div>
 
           {/* Price Display */}
-          <div className="d-flex align-items-baseline gap-1 mb-3">
+          <div className="d-flex align-items-baseline justify-content-center gap-1 mb-3">
             <span className="font-heading fs-5 fw-extrabold text-dark">
               ₹{currentPrice * quantity}
             </span>
@@ -146,9 +146,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
 
         {/* Action Row: QTY Counter + Add to Cart + Wishlist Heart */}
         <div className="pt-2 border-top">
-          <div className="d-flex align-items-center justify-content-between gap-1">
+          <div className="d-flex align-items-center justify-content-center gap-1">
             {/* Quantity Selector (- 1 +) */}
-            <div className="d-flex align-items-center border rounded-pill px-2 py-1 bg-light">
+            <div className="d-flex align-items-center border rounded-pill px-2 py-1 bg-light flex-shrink-0">
               <button
                 type="button"
                 onClick={(e) => {

@@ -97,22 +97,22 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
       {/* Main Sticky Header */}
       <header
         className="fixed-top w-100 glass-header-v2"
-        style={{ top: '30px', zIndex: 1040 }}
+        style={{ zIndex: 1040 }}
       >
         <div className="container py-2">
           {/* Row 1: Logo, Search, User & Cart */}
-          <div className="d-flex align-items-center justify-content-between gap-2 py-1">
+          <div className="d-flex align-items-center justify-content-between gap-1 gap-sm-3 py-1">
             {/* Logo */}
             <Link href="/" className="text-decoration-none d-flex align-items-center gap-2 flex-shrink-0">
               <div
                 className="rounded-circle d-flex align-items-center justify-content-center text-white"
-                style={{ width: '40px', height: '40px', background: 'linear-gradient(135deg, #0A6836, #064E28)' }}
+                style={{ width: '36px', height: '36px', background: 'linear-gradient(135deg, #0A6836, #064E28)' }}
               >
-                <Leaf size={22} className="animate-float-fast" />
+                <Leaf size={19} className="animate-float-fast" />
               </div>
               <div className="d-flex flex-column">
                 <span
-                  className="brand-text font-heading fw-extrabold fs-3 text-dark lh-1"
+                  className="brand-text font-heading fw-extrabold fs-4 fs-sm-3 text-dark lh-1"
                   style={{ letterSpacing: '-0.5px' }}
                 >
                   Fresh<span style={{ color: '#0A6836' }}>Vana</span>
@@ -150,20 +150,21 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
             </div>
 
             {/* Right Icons: Search Mobile, Wishlist, Cart & Profile Dropdown */}
-            <div className="d-flex align-items-center gap-2 gap-sm-3 flex-shrink-0">
+            <div className="d-flex align-items-center gap-1 gap-sm-2 gap-md-3 flex-shrink-0">
               {/* Search Icon Mobile */}
               <button
                 onClick={onOpenSearch}
                 className="btn btn-light rounded-circle p-2 d-md-none text-dark"
+                style={{ width: '36px', height: '36px' }}
                 title="Search Produce"
               >
-                <Search size={18} />
+                <Search size={17} />
               </button>
 
-              {/* Wishlist */}
+              {/* Wishlist (Shown on Tablet & Desktop >=576px) */}
               <Link
                 href="/wishlist"
-                className="d-flex align-items-center gap-2 text-decoration-none text-dark position-relative"
+                className="d-none d-sm-flex align-items-center gap-2 text-decoration-none text-dark position-relative"
                 title="Wishlist"
               >
                 <div
@@ -193,9 +194,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
               >
                 <div
                   className="rounded-circle d-flex align-items-center justify-content-center bg-light text-dark position-relative"
-                  style={{ width: '38px', height: '38px' }}
+                  style={{ width: '36px', height: '36px' }}
                 >
-                  <ShoppingBag size={18} />
+                  <ShoppingBag size={17} />
                   {itemCount > 0 && (
                     <span
                       className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
@@ -213,7 +214,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
                 </div>
               </button>
 
-              {/* Desktop Profile Dropdown Pill */}
+              {/* Desktop Profile Dropdown Pill (>=576px) */}
               <div className="position-relative d-none d-sm-block">
                 <button
                   type="button"
@@ -280,23 +281,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
                 )}
               </div>
 
-              {/* Mobile Profile Icon Button (<576px) */}
-              <Link
-                href="/login"
-                className="btn btn-light rounded-circle p-2 d-sm-none text-dark"
-                title="Account / Sign In"
-              >
-                <User size={18} className="text-success" />
-              </Link>
-
               {/* Hamburger Menu Toggle Button (<1200px / mobile & tablet) */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="btn btn-success rounded-3 p-2 border-0 d-xl-none text-white shadow-sm"
-                style={{ background: '#0A6836' }}
+                style={{ background: '#0A6836', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 aria-label="Toggle Navigation Menu"
               >
-                {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+                {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
               </button>
             </div>
           </div>

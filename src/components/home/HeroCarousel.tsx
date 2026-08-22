@@ -89,17 +89,16 @@ export const HeroCarousel: React.FC = () => {
 
   return (
     <section
-      className="position-relative overflow-hidden bg-cream"
-      style={{ paddingTop: '165px', paddingBottom: '25px' }}
+      className="position-relative overflow-hidden bg-cream hero-carousel-section"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
       <div className="container">
         <div
-          className="rounded-5 position-relative overflow-hidden shadow-sm border p-4 p-md-5"
+          className="rounded-5 position-relative overflow-hidden shadow-sm border p-3 p-sm-4 p-md-5"
           style={{
             background: 'linear-gradient(135deg, #F4FBF7 0%, #E8F7EE 50%, #F4FBF7 100%)',
-            minHeight: '440px',
+            minHeight: '380px',
             borderColor: '#D1E7DD'
           }}
         >
@@ -110,19 +109,19 @@ export const HeroCarousel: React.FC = () => {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -25 }}
               transition={{ duration: 0.45 }}
-              className="row align-items-center gy-4 position-relative"
+              className="row align-items-center gy-3 gy-md-4 position-relative"
               style={{ zIndex: 2 }}
             >
               {/* Left Column: Heading, Subtitle, 4 Badges, CTA Buttons */}
-              <div className="col-lg-6">
-                <div className="d-inline-flex align-items-center gap-2 bg-success bg-opacity-10 text-success rounded-pill px-3 py-1 fw-bold small mb-3 border border-success border-opacity-25">
+              <div className="col-lg-6 text-center text-lg-start">
+                <div className="d-inline-flex align-items-center gap-2 bg-success bg-opacity-10 text-success rounded-pill px-3 py-1 fw-bold small mb-2 mb-md-3 border border-success border-opacity-25 mx-auto mx-lg-0">
                   <Sparkles size={16} />
                   <span>{current.badge}</span>
                 </div>
 
                 <h1
-                  className="font-heading display-5 fw-extrabold text-dark mb-3"
-                  style={{ lineHeight: 1.15, letterSpacing: '-0.5px' }}
+                  className="font-heading display-6 display-md-5 fw-extrabold text-dark mb-2 mb-md-3 text-center text-lg-start"
+                  style={{ lineHeight: 1.18, letterSpacing: '-0.5px' }}
                 >
                   {current.title.split('Freshness').map((part, i) =>
                     i === 0 ? (
@@ -136,21 +135,21 @@ export const HeroCarousel: React.FC = () => {
                   )}
                 </h1>
 
-                <p className="fs-5 text-muted mb-4" style={{ lineHeight: 1.6 }}>
+                <p className="fs-6 fs-md-5 text-muted mb-3 mb-md-4 text-center text-lg-start" style={{ lineHeight: 1.5 }}>
                   {current.subtitle}
                 </p>
 
                 {/* 4 Feature Badges Row */}
-                <div className="row g-2 mb-4">
+                <div className="row g-2 mb-3 mb-md-4 justify-content-center justify-content-lg-start">
                   <div className="col-6 col-sm-3">
                     <div className="bg-white rounded-3 p-2 text-center border shadow-xs">
                       <div className="p-1 rounded-circle bg-success bg-opacity-10 text-success d-inline-flex mb-1">
-                        <Leaf size={16} />
+                        <Leaf size={14} />
                       </div>
-                      <strong className="d-block text-dark font-heading" style={{ fontSize: '0.75rem' }}>
+                      <strong className="d-block text-dark font-heading" style={{ fontSize: '0.72rem' }}>
                         Farm Fresh
                       </strong>
-                      <span className="text-muted d-block" style={{ fontSize: '0.65rem' }}>
+                      <span className="text-muted d-block" style={{ fontSize: '0.62rem' }}>
                         Direct From Farms
                       </span>
                     </div>
@@ -159,12 +158,12 @@ export const HeroCarousel: React.FC = () => {
                   <div className="col-6 col-sm-3">
                     <div className="bg-white rounded-3 p-2 text-center border shadow-xs">
                       <div className="p-1 rounded-circle bg-success bg-opacity-10 text-success d-inline-flex mb-1">
-                        <ShieldCheck size={16} />
+                        <ShieldCheck size={14} />
                       </div>
-                      <strong className="d-block text-dark font-heading" style={{ fontSize: '0.75rem' }}>
+                      <strong className="d-block text-dark font-heading" style={{ fontSize: '0.72rem' }}>
                         100% Organic
                       </strong>
-                      <span className="text-muted d-block" style={{ fontSize: '0.65rem' }}>
+                      <span className="text-muted d-block" style={{ fontSize: '0.62rem' }}>
                         Chemical Free
                       </span>
                     </div>
@@ -173,12 +172,12 @@ export const HeroCarousel: React.FC = () => {
                   <div className="col-6 col-sm-3">
                     <div className="bg-white rounded-3 p-2 text-center border shadow-xs">
                       <div className="p-1 rounded-circle bg-success bg-opacity-10 text-success d-inline-flex mb-1">
-                        <Truck size={16} />
+                        <Truck size={14} />
                       </div>
-                      <strong className="d-block text-dark font-heading" style={{ fontSize: '0.75rem' }}>
+                      <strong className="d-block text-dark font-heading" style={{ fontSize: '0.72rem' }}>
                         Fast Delivery
                       </strong>
-                      <span className="text-muted d-block" style={{ fontSize: '0.65rem' }}>
+                      <span className="text-muted d-block" style={{ fontSize: '0.62rem' }}>
                         On Time Always
                       </span>
                     </div>
@@ -187,12 +186,12 @@ export const HeroCarousel: React.FC = () => {
                   <div className="col-6 col-sm-3">
                     <div className="bg-white rounded-3 p-2 text-center border shadow-xs">
                       <div className="p-1 rounded-circle bg-success bg-opacity-10 text-success d-inline-flex mb-1">
-                        <Award size={16} />
+                        <Award size={14} />
                       </div>
-                      <strong className="d-block text-dark font-heading" style={{ fontSize: '0.75rem' }}>
+                      <strong className="d-block text-dark font-heading" style={{ fontSize: '0.72rem' }}>
                         Best Quality
                       </strong>
-                      <span className="text-muted d-block" style={{ fontSize: '0.65rem' }}>
+                      <span className="text-muted d-block" style={{ fontSize: '0.62rem' }}>
                         Quality Checked
                       </span>
                     </div>
@@ -200,54 +199,54 @@ export const HeroCarousel: React.FC = () => {
                 </div>
 
                 {/* CTA Buttons */}
-                <div className="d-flex align-items-center gap-3 flex-wrap">
+                <div className="d-flex align-items-center justify-content-center justify-content-lg-start gap-2 gap-sm-3 flex-wrap">
                   <Link
                     href={current.ctaPrimaryLink}
-                    className="btn btn-success btn-lg rounded-pill px-4 py-3 fw-bold text-white d-inline-flex align-items-center gap-2 shadow"
-                    style={{ background: '#0A6836', border: 'none' }}
+                    className="btn btn-success rounded-pill px-3 px-sm-4 py-2 py-sm-3 fw-bold text-white d-inline-flex align-items-center gap-2 shadow flex-grow-1 flex-sm-grow-0 justify-content-center"
+                    style={{ background: '#0A6836', border: 'none', fontSize: '0.9rem' }}
                   >
                     <span>{current.ctaPrimaryText}</span>
-                    <ArrowRight size={18} />
+                    <ArrowRight size={16} />
                   </Link>
 
                   <Link
                     href={current.ctaSecondaryLink}
-                    className="btn btn-white btn-lg rounded-pill px-4 py-3 fw-bold text-dark d-inline-flex align-items-center gap-2 shadow-sm border"
+                    className="btn btn-white rounded-pill px-3 px-sm-4 py-2 py-sm-3 fw-bold text-dark d-inline-flex align-items-center gap-2 shadow-sm border flex-grow-1 flex-sm-grow-0 justify-content-center"
+                    style={{ fontSize: '0.9rem' }}
                   >
                     <span>{current.ctaSecondaryText}</span>
-                    <ArrowRight size={18} />
+                    <ArrowRight size={16} />
                   </Link>
                 </div>
               </div>
 
               {/* Right Column: Large Produce Visual + UP TO 40% OFF Circular Badge */}
               <div className="col-lg-6 text-center position-relative">
-                {/* Circular Badge Top Right */}
+                {/* Circular Badge Top Right (Desktop/Tablet) */}
                 <div
-                  className="position-absolute top-0 end-0 rounded-circle text-white d-flex flex-column align-items-center justify-content-center shadow-lg"
+                  className="position-absolute top-0 end-0 rounded-circle text-white d-none d-sm-flex flex-column align-items-center justify-content-center shadow-lg"
                   style={{
-                    width: '85px',
-                    height: '85px',
+                    width: '75px',
+                    height: '75px',
                     background: 'linear-gradient(135deg, #0A6836, #064E28)',
                     zIndex: 5,
                     border: '2px solid #FFFFFF'
                   }}
                 >
-                  <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <span style={{ fontSize: '0.6rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     UP TO
                   </span>
-                  <strong className="font-heading fw-extrabold fs-5 lh-1">40%</strong>
-                  <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <strong className="font-heading fw-extrabold fs-6 lh-1">40%</strong>
+                  <span style={{ fontSize: '0.6rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     OFF
                   </span>
                 </div>
 
                 {/* Produce Visual Image */}
-                <div className="position-relative d-inline-block mx-auto" style={{ maxWidth: '480px', width: '100%' }}>
+                <div className="position-relative d-inline-block mx-auto" style={{ maxWidth: '440px', width: '100%' }}>
                   <div
-                    className="position-relative"
+                    className="position-relative hero-image-container"
                     style={{
-                      height: '340px',
                       filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.15))'
                     }}
                   >
@@ -266,11 +265,11 @@ export const HeroCarousel: React.FC = () => {
             </motion.div>
           </AnimatePresence>
 
-          {/* Carousel Arrows */}
+          {/* Carousel Arrows (Desktop / Tablet side navigation) */}
           <button
             onClick={handlePrev}
-            className="btn btn-white btn-sm rounded-circle p-2 position-absolute top-50 start-0 translate-middle-y ms-3 shadow border text-dark"
-            style={{ zIndex: 10 }}
+            className="btn btn-white btn-sm rounded-circle p-2 position-absolute top-50 start-0 translate-middle-y ms-3 shadow border text-dark d-none d-md-flex align-items-center justify-content-center"
+            style={{ zIndex: 10, width: '40px', height: '40px' }}
             aria-label="Previous Slide"
           >
             <ChevronLeft size={20} />
@@ -278,15 +277,23 @@ export const HeroCarousel: React.FC = () => {
 
           <button
             onClick={handleNext}
-            className="btn btn-white btn-sm rounded-circle p-2 position-absolute top-50 end-0 translate-middle-y me-3 shadow border text-dark"
-            style={{ zIndex: 10 }}
+            className="btn btn-white btn-sm rounded-circle p-2 position-absolute top-50 end-0 translate-middle-y me-3 shadow border text-dark d-none d-md-flex align-items-center justify-content-center"
+            style={{ zIndex: 10, width: '40px', height: '40px' }}
             aria-label="Next Slide"
           >
             <ChevronRight size={20} />
           </button>
 
-          {/* Bottom Dots Indicator */}
-          <div className="position-absolute bottom-0 start-50 translate-middle-x mb-3 d-flex gap-2" style={{ zIndex: 10 }}>
+          {/* Bottom Dots Indicator with Mobile Nav Buttons */}
+          <div className="position-absolute bottom-0 start-50 translate-middle-x mb-2 mb-md-3 d-flex align-items-center gap-2" style={{ zIndex: 10 }}>
+            <button
+              onClick={handlePrev}
+              className="btn btn-sm text-dark p-1 d-md-none border-0 bg-transparent opacity-75"
+              aria-label="Previous Slide"
+            >
+              <ChevronLeft size={18} />
+            </button>
+
             {slides.map((s, idx) => (
               <button
                 key={s.id}
@@ -295,14 +302,22 @@ export const HeroCarousel: React.FC = () => {
                   currentSlide === idx ? 'bg-success' : 'bg-secondary bg-opacity-30'
                 }`}
                 style={{
-                  width: currentSlide === idx ? '30px' : '10px',
-                  height: '10px',
+                  width: currentSlide === idx ? '26px' : '8px',
+                  height: '8px',
                   border: 'none',
                   background: currentSlide === idx ? '#0A6836' : undefined
                 }}
                 aria-label={`Slide ${idx + 1}`}
               />
             ))}
+
+            <button
+              onClick={handleNext}
+              className="btn btn-sm text-dark p-1 d-md-none border-0 bg-transparent opacity-75"
+              aria-label="Next Slide"
+            >
+              <ChevronRight size={18} />
+            </button>
           </div>
         </div>
       </div>

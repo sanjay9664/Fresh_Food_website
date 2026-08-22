@@ -48,13 +48,19 @@ export const Footer: React.FC = () => {
             animate={{ y: [0, -12, 0], rotate: [0, 2, 0] }}
             transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
             className="position-absolute d-none d-lg-block pointer-events-none opacity-40"
-            style={{ width: '320px', height: '320px', right: '-2%', bottom: '-15%', zIndex: 1 }}
+            style={{ width: '300px', height: '300px', right: '-2%', bottom: '-15%', zIndex: 1 }}
           >
-            <Image src="/images/c1.png" alt="Organic Basket" fill className="object-fit-contain" />
+            <Image
+              src="/images/c1.png"
+              alt="Organic Basket"
+              fill
+              className="object-fit-contain"
+              sizes="300px"
+            />
           </motion.div>
 
           <div className="row align-items-center gy-4 position-relative" style={{ zIndex: 3 }}>
-            <div className="col-lg-7">
+            <div className="col-lg-6">
               <div className="d-inline-flex align-items-center gap-2 bg-warning bg-opacity-20 text-warning rounded-pill px-3 py-1 fw-bold small mb-3 border border-warning border-opacity-30">
                 <Sparkles size={16} />
                 <span>GET 20% OFF YOUR FIRST ORDER</span>
@@ -64,44 +70,52 @@ export const Footer: React.FC = () => {
                 Join the FreshVana Organic Family
               </h3>
 
-              <p className="mb-0 text-white-50 fs-6" style={{ lineHeight: 1.6 }}>
+              <p className="mb-0 text-white-50 small" style={{ lineHeight: 1.6 }}>
                 Get weekly organic farm harvest updates, healthy recipes, and secret discount coupons delivered straight to your inbox.
               </p>
             </div>
 
-            <div className="col-lg-5">
+            <div className="col-lg-6">
               {subscribed ? (
-                <div className="bg-white bg-opacity-10 rounded-4 p-3 border border-white border-opacity-20 text-center">
-                  <div className="d-flex align-items-center justify-content-center gap-2 text-warning fw-bold mb-1">
-                    <CheckCircle2 size={20} />
+                <div className="bg-white bg-opacity-10 rounded-4 p-4 border border-white border-opacity-20 text-center">
+                  <div className="d-flex align-items-center justify-content-center gap-2 text-warning fw-bold mb-1 fs-5">
+                    <CheckCircle2 size={22} />
                     <span>Welcome to FreshVana Family!</span>
                   </div>
-                  <span className="text-white-50 small">Your 20% OFF coupon code <strong>FRESH20</strong> is active!</span>
+                  <span className="text-white-50 small">Your 20% OFF coupon code <strong className="text-warning">FRESH20</strong> is active!</span>
                 </div>
               ) : (
-                <form onSubmit={handleSubscribe} className="d-flex flex-column gap-2">
-                  <div className="input-group rounded-pill overflow-hidden bg-white p-1 shadow-lg">
-                    <span className="input-group-text bg-transparent border-0 text-muted ps-3">
-                      <Mail size={18} />
-                    </span>
-                    <input
-                      type="email"
-                      placeholder="Enter your email address..."
-                      className="form-control border-0 bg-transparent py-2 shadow-none text-dark small"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                    <button
-                      className="btn btn-warning rounded-pill px-4 fw-bold text-dark border-0 d-inline-flex align-items-center gap-2 shadow"
-                      type="submit"
-                      style={{ background: '#FFB800' }}
-                    >
-                      <span>Join Now</span>
-                      <Send size={16} />
-                    </button>
+                <form onSubmit={handleSubscribe}>
+                  <div className="row g-2 align-items-center">
+                    <div className="col-12 col-sm-7">
+                      <div className="input-group border rounded-pill overflow-hidden bg-white px-2 py-1 shadow-sm">
+                        <span className="input-group-text bg-transparent border-0 text-muted ps-2">
+                          <Mail size={18} />
+                        </span>
+                        <input
+                          type="email"
+                          placeholder="Enter your email address..."
+                          className="form-control border-0 bg-transparent py-2 shadow-none text-dark small"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="col-12 col-sm-5">
+                      <button
+                        className="btn btn-warning rounded-pill w-100 py-3 px-4 fw-bold text-dark border-0 d-flex align-items-center justify-content-center gap-2 shadow"
+                        type="submit"
+                        style={{ background: '#FFB800' }}
+                      >
+                        <span>Subscribe Now</span>
+                        <Send size={16} />
+                      </button>
+                    </div>
                   </div>
-                  <span className="text-white-50 small ps-3" style={{ fontSize: '0.72rem' }}>
+
+                  <span className="text-white-50 small d-block mt-2 text-center text-sm-start ps-1" style={{ fontSize: '0.72rem' }}>
                     🔒 We respect your privacy. Unsubscribe anytime with 1-click.
                   </span>
                 </form>

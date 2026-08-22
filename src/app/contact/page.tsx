@@ -53,7 +53,7 @@ export default function ContactPage() {
   ];
 
   return (
-    <div className="bg-cream min-vh-100" style={{ paddingTop: '110px' }}>
+    <div className="bg-cream min-vh-100 mobile-hero-padding" style={{ paddingTop: '110px' }}>
       {/* Full-Width Hero Section Touching Under Floating Navbar */}
       <section
         className="w-100 position-relative py-5 px-3 text-white overflow-hidden"

@@ -21,7 +21,11 @@ import {
   Clock,
   ShieldCheck,
   LogOut,
-  ShieldAlert
+  ShieldAlert,
+  Home,
+  Tag,
+  Info,
+  PhoneCall
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -52,14 +56,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
     return () => clearInterval(timer);
   }, []);
 
-  // Requested Navigation Order: Home -> Categories -> Shop -> Fresh Deals -> About Us -> Contact Us
   const navLinks = [
-    { name: 'Home', href: '/' },
-    { name: 'Categories', href: '/categories' },
-    { name: 'Shop', href: '/shop' },
-    { name: 'Fresh Deals', href: '/deals', badge: 'HOT' },
-    { name: 'About Us', href: '/about' },
-    { name: 'Contact Us', href: '/contact' }
+    { name: 'Home', href: '/', icon: Home },
+    { name: 'Categories', href: '/categories', icon: Layers },
+    { name: 'Shop', href: '/shop', icon: ShoppingBag },
+    { name: 'Fresh Deals', href: '/deals', badge: 'HOT', icon: Tag },
+    { name: 'About Us', href: '/about', icon: Info },
+    { name: 'Contact Us', href: '/contact', icon: PhoneCall }
   ];
 
   return (
@@ -98,14 +101,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
       >
         <div className="container py-2">
           {/* Row 1: Logo, Search, User & Cart */}
-          <div className="d-flex align-items-center justify-content-between gap-3 py-1">
+          <div className="d-flex align-items-center justify-content-between gap-2 py-1">
             {/* Logo */}
             <Link href="/" className="text-decoration-none d-flex align-items-center gap-2 flex-shrink-0">
               <div
                 className="rounded-circle d-flex align-items-center justify-content-center text-white"
-                style={{ width: '42px', height: '42px', background: 'linear-gradient(135deg, #0A6836, #064E28)' }}
+                style={{ width: '40px', height: '40px', background: 'linear-gradient(135deg, #0A6836, #064E28)' }}
               >
-                <Leaf size={24} className="animate-float-fast" />
+                <Leaf size={22} className="animate-float-fast" />
               </div>
               <div className="d-flex flex-column">
                 <span
@@ -115,7 +118,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
                   Fresh<span style={{ color: '#0A6836' }}>Vana</span>
                 </span>
                 <span
-                  className="text-muted"
+                  className="text-muted d-none d-sm-inline"
                   style={{ fontSize: '0.62rem', letterSpacing: '0.8px', fontWeight: 600 }}
                 >
                   Freshness, Naturally Delivered.
@@ -123,8 +126,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
               </div>
             </Link>
 
-            {/* Large Center Search Bar */}
-            <div className="d-none d-md-flex align-items-center flex-grow-1 mx-3" style={{ maxWidth: '540px' }}>
+            {/* Large Center Search Bar (Desktop / Laptop) */}
+            <div className="d-none d-md-flex align-items-center flex-grow-1 mx-3" style={{ maxWidth: '520px' }}>
               <div
                 onClick={onOpenSearch}
                 className="input-group rounded-pill overflow-hidden border bg-light shadow-sm cursor-pointer w-100"
@@ -146,14 +149,15 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
               </div>
             </div>
 
-            {/* Right Icons: Wishlist, Cart & Profile Dropdown */}
-            <div className="d-flex align-items-center gap-3 flex-shrink-0">
+            {/* Right Icons: Search Mobile, Wishlist, Cart & Profile Dropdown */}
+            <div className="d-flex align-items-center gap-2 gap-sm-3 flex-shrink-0">
               {/* Search Icon Mobile */}
               <button
                 onClick={onOpenSearch}
                 className="btn btn-light rounded-circle p-2 d-md-none text-dark"
+                title="Search Produce"
               >
-                <Search size={20} />
+                <Search size={18} />
               </button>
 
               {/* Wishlist */}
@@ -164,13 +168,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
               >
                 <div
                   className="rounded-circle d-flex align-items-center justify-content-center bg-light text-dark position-relative"
-                  style={{ width: '40px', height: '40px' }}
+                  style={{ width: '38px', height: '38px' }}
                 >
-                  <Heart size={20} />
+                  <Heart size={18} />
                   {wishlistCount > 0 && (
                     <span
                       className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                      style={{ fontSize: '0.65rem' }}
+                      style={{ fontSize: '0.62rem' }}
                     >
                       {wishlistCount}
                     </span>
@@ -189,13 +193,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
               >
                 <div
                   className="rounded-circle d-flex align-items-center justify-content-center bg-light text-dark position-relative"
-                  style={{ width: '40px', height: '40px' }}
+                  style={{ width: '38px', height: '38px' }}
                 >
-                  <ShoppingBag size={20} />
+                  <ShoppingBag size={18} />
                   {itemCount > 0 && (
                     <span
                       className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                      style={{ fontSize: '0.65rem' }}
+                      style={{ fontSize: '0.62rem' }}
                     >
                       {itemCount}
                     </span>
@@ -209,7 +213,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
                 </div>
               </button>
 
-              {/* Profile Dropdown */}
+              {/* Desktop Profile Dropdown Pill */}
               <div className="position-relative d-none d-sm-block">
                 <button
                   type="button"
@@ -276,17 +280,28 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
                 )}
               </div>
 
-              {/* Mobile Hamburger Toggle */}
+              {/* Mobile Profile Icon Button (<576px) */}
+              <Link
+                href="/login"
+                className="btn btn-light rounded-circle p-2 d-sm-none text-dark"
+                title="Account / Sign In"
+              >
+                <User size={18} className="text-success" />
+              </Link>
+
+              {/* Hamburger Menu Toggle Button (<1200px / mobile & tablet) */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="btn btn-light p-2 border-0 d-xl-none text-dark"
+                className="btn btn-success rounded-3 p-2 border-0 d-xl-none text-white shadow-sm"
+                style={{ background: '#0A6836' }}
+                aria-label="Toggle Navigation Menu"
               >
-                {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
               </button>
             </div>
           </div>
 
-          {/* Row 2: Category Selector Button + Nav Links */}
+          {/* Row 2: Category Selector Button + Nav Links (Desktop XL) */}
           <div className="d-none d-xl-flex align-items-center justify-content-between pt-2 border-top">
             <div className="d-flex align-items-center gap-3">
               {/* All Categories Dropdown Button */}
@@ -326,47 +341,88 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
         </div>
       </header>
 
-      {/* Mobile Drawer Menu */}
+      {/* Mobile Drawer Menu (<1200px Mobile & Tablet) */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, x: '100%' }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: '100%' }}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="position-fixed top-0 end-0 h-100 w-100 bg-white d-xl-none"
-            style={{ zIndex: 1050, paddingTop: '100px' }}
+            className="position-fixed top-0 start-0 h-100 w-100 bg-white d-xl-none overflow-auto"
+            style={{ zIndex: 1050, paddingTop: '95px' }}
           >
             <div className="p-4 d-flex flex-column h-100 justify-content-between">
               <div>
+                {/* Mobile Drawer Header */}
                 <div className="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
                   <div className="d-flex align-items-center gap-2">
-                    <Leaf className="text-success" size={24} />
-                    <span className="font-heading fw-bold fs-4 text-dark">
-                      Fresh<span style={{ color: '#0A6836' }}>Vana</span>
-                    </span>
+                    <div className="p-2 rounded-circle bg-success text-white">
+                      <User size={18} />
+                    </div>
+                    <div className="d-flex flex-column">
+                      <strong className="font-heading text-dark">
+                        {isLoggedIn ? `Hello, ${user?.name}` : 'Welcome Guest'}
+                      </strong>
+                      <span className="text-muted small" style={{ fontSize: '0.72rem' }}>
+                        {isLoggedIn ? user?.email : 'Sign in to access your orders'}
+                      </span>
+                    </div>
                   </div>
+
                   <button
                     onClick={() => setMobileMenuOpen(false)}
-                    className="btn btn-light rounded-circle p-2"
+                    className="btn btn-light rounded-circle p-2 border"
                   >
-                    <X size={22} />
+                    <X size={20} />
                   </button>
                 </div>
 
-                <div className="d-flex flex-column gap-3 fs-5">
-                  {navLinks.map((link) => (
+                {/* Mobile Navigation Links */}
+                <div className="d-flex flex-column gap-2 mb-4">
+                  <span className="text-muted fw-bold small mb-1" style={{ letterSpacing: '0.5px' }}>
+                    NAVIGATION MENU
+                  </span>
+                  {navLinks.map((link) => {
+                    const IconComp = link.icon;
+                    const isActive = pathname === link.href;
+
+                    return (
+                      <Link
+                        key={link.name}
+                        href={link.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`text-decoration-none fw-bold py-3 px-3 rounded-4 d-flex align-items-center justify-content-between ${
+                          isActive ? 'bg-success text-white shadow-sm' : 'text-dark hover-bg-light border'
+                        }`}
+                        style={isActive ? { background: '#0A6836' } : {}}
+                      >
+                        <div className="d-flex align-items-center gap-3">
+                          <IconComp size={20} className={isActive ? 'text-white' : 'text-success'} />
+                          <span>{link.name}</span>
+                        </div>
+                        {link.badge && (
+                          <span className="badge bg-danger rounded-pill px-2 py-1" style={{ fontSize: '0.65rem' }}>
+                            {link.badge}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                {/* Super Admin & Profile Actions */}
+                <div className="pt-3 border-top d-flex flex-column gap-2">
+                  {isLoggedIn && user?.role === 'admin' && (
                     <Link
-                      key={link.name}
-                      href={link.href}
+                      href="/admin"
                       onClick={() => setMobileMenuOpen(false)}
-                      className={`text-decoration-none fw-semibold py-2 px-3 rounded-3 ${
-                        pathname === link.href ? 'bg-success text-white' : 'text-dark hover-bg-light'
-                      }`}
+                      className="btn btn-warning rounded-4 py-3 px-3 fw-bold text-dark d-flex align-items-center justify-content-center gap-2 shadow-sm border-0"
                     >
-                      {link.name}
+                      <ShieldAlert size={18} />
+                      <span>Enter Super Admin Panel</span>
                     </Link>
-                  ))}
+                  )}
 
                   {isLoggedIn ? (
                     <button
@@ -374,7 +430,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
                         setMobileMenuOpen(false);
                         logout();
                       }}
-                      className="btn btn-danger rounded-3 py-2 px-3 fw-bold text-center border-0 text-white d-flex align-items-center justify-content-center gap-2"
+                      className="btn btn-danger rounded-4 py-3 px-3 fw-bold text-center border-0 text-white d-flex align-items-center justify-content-center gap-2 mt-1"
                     >
                       <LogOut size={18} />
                       <span>Logout / Sign Out</span>
@@ -383,15 +439,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
                     <Link
                       href="/login"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="text-decoration-none fw-semibold py-2 px-3 rounded-3 text-success hover-bg-light border text-center"
+                      className="btn btn-success rounded-4 py-3 px-3 fw-bold text-center border-0 text-white d-block"
+                      style={{ background: '#0A6836' }}
                     >
-                      Sign In Now
+                      Sign In Now →
                     </Link>
                   )}
                 </div>
               </div>
 
-              <div className="pt-4 border-top text-center text-muted small">
+              <div className="pt-4 text-center text-muted small">
                 Freshness, Naturally Delivered to your doorstep.
               </div>
             </div>

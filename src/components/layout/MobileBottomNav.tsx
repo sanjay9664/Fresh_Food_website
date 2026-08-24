@@ -56,10 +56,10 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onOpenSearch }
 
   return (
     <nav
-      className="mobile-bottom-nav fixed-bottom bg-white border-top shadow-lg d-flex align-items-center justify-content-around py-1 d-md-none"
+      className="mobile-bottom-nav fixed-bottom bg-white border-top shadow-lg d-flex align-items-center justify-content-around d-md-none"
       style={{
         zIndex: 1040,
-        height: '62px',
+        height: '72px',
         borderTopLeftRadius: '20px',
         borderTopRightRadius: '20px',
         boxShadow: '0 -4px 25px rgba(0, 0, 0, 0.08)',
@@ -74,30 +74,20 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onOpenSearch }
         const content = (
           <motion.div
             whileTap={{ scale: 0.9 }}
-            className="d-flex flex-column align-items-center justify-content-center position-relative py-1 px-2"
-            style={{ minWidth: '54px' }}
+            className="mobile-nav-tab d-flex flex-column align-items-center justify-content-center position-relative px-2"
+            style={{ minWidth: '58px', height: '64px' }}
           >
-            {/* Active Highlight Indicator Pill */}
-            {isActive && (
-              <motion.span
-                layoutId="activeTabPill"
-                className="position-absolute rounded-pill bg-success opacity-15"
-                style={{
-                  top: '2px',
-                  width: '40px',
-                  height: '28px',
-                  zIndex: 0
-                }}
-                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-              />
-            )}
-
             {/* Icon + Badge */}
-            <div className="position-relative d-flex align-items-center justify-content-center mb-1" style={{ zIndex: 1 }}>
+            <div
+              className={`mobile-nav-icon position-relative d-flex align-items-center justify-content-center mb-1 ${
+                isActive ? 'mobile-nav-icon-active' : ''
+              }`}
+              style={{ zIndex: 1 }}
+            >
               <IconComponent
-                size={21}
-                className={isActive ? 'text-success fw-bold' : 'text-secondary'}
-                style={{ color: isActive ? '#0A6836' : '#64748B' }}
+                size={20}
+                strokeWidth={isActive ? 2.6 : 2.1}
+                style={{ color: isActive ? '#FFFFFF' : '#64748B' }}
               />
 
               {/* Number Badge (Cart / Wishlist) */}
@@ -123,9 +113,9 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onOpenSearch }
 
             {/* Tab Name Label */}
             <span
-              className={`font-heading ${isActive ? 'fw-bold text-success' : 'text-muted'}`}
-              style={{
-                fontSize: '0.68rem',
+                className={`font-heading ${isActive ? 'fw-bold text-success' : 'text-muted'}`}
+                style={{
+                fontSize: '0.65rem',
                 zIndex: 1,
                 color: isActive ? '#0A6836' : '#64748B',
                 lineHeight: 1

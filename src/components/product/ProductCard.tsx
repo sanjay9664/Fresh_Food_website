@@ -66,7 +66,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
     e.preventDefault();
     e.stopPropagation();
     addToCart(product, selectedWeight, 1);
-    setIsCartOpen(true); // Automatically open cart drawer to show added item & total
+    // Keep shoppers on the product grid so they can add multiple items quickly.
+    // The basket remains available from the bottom Cart tab / header icon.
   };
 
   const handleNavigateToDetails = () => {

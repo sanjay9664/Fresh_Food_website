@@ -15,7 +15,7 @@ interface QuickViewModalProps {
 }
 
 export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => {
-  const { cart, addToCart, updateQuantity, removeFromCart, setIsCartOpen } = useCart();
+  const { cart, addToCart, updateQuantity, removeFromCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
   const [selectedWeight, setSelectedWeight] = useState<string>(product?.weights[0] || '1kg');
@@ -81,7 +81,6 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose
       addToCart(product, selectedWeight, quantity);
     }
     onClose();
-    setIsCartOpen(true);
   };
 
   return (

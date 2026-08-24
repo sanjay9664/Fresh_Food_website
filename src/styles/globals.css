@@ -193,6 +193,20 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   scrollbar-width: none;
 }
 
+/* Mobile app navigation */
+.mobile-nav-icon {
+  width: 38px;
+  height: 30px;
+  border-radius: 12px;
+  transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.mobile-nav-icon-active {
+  background: linear-gradient(135deg, #0A6836, #08723b);
+  box-shadow: 0 6px 14px rgba(10, 104, 54, 0.24);
+  transform: translateY(-1px);
+}
+
 /* Responsive Utilities for Mobile & Tablet */
 @media (max-width: 991.98px) {
   .top-bar-v2 {
@@ -224,8 +238,19 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 
 @media (max-width: 575.98px) {
   body {
-    padding-bottom: 70px !important;
+    padding-bottom: calc(88px + env(safe-area-inset-bottom)) !important;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-bottom-nav {
+    padding-bottom: env(safe-area-inset-bottom) !important;
+    height: calc(72px + env(safe-area-inset-bottom)) !important;
+    border-top-left-radius: 22px !important;
+    border-top-right-radius: 22px !important;
+  }
+
+  .mobile-nav-tab {
+    touch-action: manipulation;
   }
 
   .top-bar-v2 {
@@ -277,6 +302,10 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   .product-card-v2 .btn-xs {
     font-size: 0.62rem !important;
     padding: 1px 5px !important;
+  }
+
+  .product-card-v2 .btn-success {
+    min-height: 40px;
   }
 
   /* Toast position on Mobile above bottom navigation */

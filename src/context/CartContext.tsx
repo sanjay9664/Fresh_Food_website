@@ -34,6 +34,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [couponCode, setCouponCode] = useState<string | null>(null);
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [hasLoadedCart, setHasLoadedCart] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('freshvana_cart');
@@ -46,11 +47,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
     if (savedCoupon) setCouponCode(savedCoupon);
+    setHasLoadedCart(true);
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('freshvana_cart', JSON.stringify(cart));
-  }, [cart]);
+    // Do not overwrite a saved basket with the initial empty state before the
+    // browser has finished loading it. This is especially important on Home,
+    // where a customer may add items immediately after the page opens.
+    if (hasLoadedCart) {
+      localStorage.setItem('freshvana_cart', JSON.stringify(cart));
+    }
+  }, [cart, hasLoadedCart]);
 
   useEffect(() => {
     if (couponCode) {

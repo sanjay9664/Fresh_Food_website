@@ -50,6 +50,7 @@ export interface Product {
   reviews: Review[];
   isFeatured?: boolean;
   isFlashSale?: boolean;
+  isAdded?: boolean;
 }
 
 export interface Category {

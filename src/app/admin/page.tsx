@@ -27,10 +27,12 @@ import { motion } from 'framer-motion';
 export default function AdminDashboardPage() {
   const {
     products,
+    allProducts,
     categories,
     addProduct,
     deleteProduct,
     toggleStock,
+    toggleProductAdded,
     addCategory,
     deleteCategory,
     resetToDefaults
@@ -448,71 +450,104 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
-            {/* Right: Live Inventory Table */}
+            {/* Right: Live Inventory Table & Super Admin Control */}
             <div className="col-lg-7">
               <div className="bg-white rounded-5 p-4 shadow-sm border">
-                <h4 className="font-heading fw-bold text-dark mb-3">
-                  Live Storefront Inventory ({products.length})
-                </h4>
+                <div className="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                  <div>
+                    <h4 className="font-heading fw-bold text-dark mb-0">
+                      Super Admin Inventory Control
+                    </h4>
+                    <span className="text-muted small">
+                      {products.length} Active in Store • {allProducts.length - products.length} Hidden from Customers
+                    </span>
+                  </div>
+
+                  <span className="badge bg-success bg-opacity-10 text-success fw-bold px-3 py-2">
+                    {allProducts.length} Total Master Produce
+                  </span>
+                </div>
 
                 <div className="table-responsive" style={{ maxHeight: '580px', overflowY: 'auto' }}>
                   <table className="table table-hover align-middle">
                     <thead className="table-light small text-muted">
                       <tr>
-                        <th>Product</th>
+                        <th>Fruit / Vegetable</th>
                         <th>Category</th>
                         <th>Price</th>
-                        <th>Status</th>
+                        <th>Super Admin Store Add</th>
+                        <th>Stock</th>
                         <th className="text-end">Action</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {products.map((p) => (
-                        <tr key={p.id}>
-                          <td>
-                            <div className="d-flex align-items-center gap-3">
-                              <div className="position-relative rounded-3 bg-light p-1" style={{ width: '44px', height: '44px' }}>
-                                <Image src={p.image} alt={p.name} fill className="object-fit-contain p-1" />
+                      {allProducts.map((p) => {
+                        const isAddedToStore = p.isAdded !== false;
+
+                        return (
+                          <tr key={p.id} className={!isAddedToStore ? 'bg-light bg-opacity-50' : ''}>
+                            <td>
+                              <div className="d-flex align-items-center gap-3">
+                                <div className="position-relative rounded-3 bg-light p-1" style={{ width: '44px', height: '44px' }}>
+                                  <Image src={p.image} alt={p.name} fill className="object-fit-contain p-1" />
+                                </div>
+                                <div>
+                                  <strong className="d-block text-dark font-heading small">{p.name}</strong>
+                                  <span className="badge bg-secondary bg-opacity-10 text-dark small">{p.badge}</span>
+                                </div>
                               </div>
-                              <div>
-                                <strong className="d-block text-dark font-heading small">{p.name}</strong>
-                                <span className="badge bg-secondary bg-opacity-10 text-dark small">{p.badge}</span>
-                              </div>
-                            </div>
-                          </td>
+                            </td>
 
-                          <td>
-                            <span className="small text-muted">{p.category}</span>
-                          </td>
+                            <td>
+                              <span className="small text-muted">{p.category}</span>
+                            </td>
 
-                          <td>
-                            <strong className="text-success small">₹{p.price}</strong>
-                            <span className="text-muted text-decoration-line-through small ms-1">₹{p.originalPrice}</span>
-                          </td>
+                            <td>
+                              <strong className="text-success small">₹{p.price}</strong>
+                              <span className="text-muted text-decoration-line-through small ms-1">₹{p.originalPrice}</span>
+                            </td>
 
-                          <td>
-                            <button
-                              onClick={() => toggleStock(p.id)}
-                              className={`btn btn-xs rounded-pill px-2 py-1 fw-bold ${
-                                p.inStock ? 'btn-success text-white' : 'btn-secondary text-white'
-                              }`}
-                              style={{ fontSize: '0.68rem' }}
-                            >
-                              {p.inStock ? 'In Stock' : 'Out of Stock'}
-                            </button>
-                          </td>
+                            {/* Super Admin Store Visibility Add Toggle */}
+                            <td>
+                              <button
+                                type="button"
+                                onClick={() => toggleProductAdded(p.id)}
+                                className={`btn btn-xs rounded-pill px-3 py-1 fw-bold transition-all shadow-sm ${
+                                  isAddedToStore
+                                    ? 'btn-success text-white'
+                                    : 'btn-outline-secondary text-muted'
+                                }`}
+                                style={{ fontSize: '0.72rem' }}
+                                title={isAddedToStore ? 'Click to hide from customer website' : 'Click to add to customer website'}
+                              >
+                                {isAddedToStore ? '✓ Added to Store' : '+ Add to Store'}
+                              </button>
+                            </td>
 
-                          <td className="text-end">
-                            <button
-                              onClick={() => deleteProduct(p.id)}
-                              className="btn btn-sm btn-light text-danger rounded-circle p-2 shadow-sm border"
-                              title="Delete Item"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
+                            <td>
+                              <button
+                                onClick={() => toggleStock(p.id)}
+                                className={`btn btn-xs rounded-pill px-2 py-1 fw-bold ${
+                                  p.inStock ? 'btn-success text-white' : 'btn-secondary text-white'
+                                }`}
+                                style={{ fontSize: '0.68rem' }}
+                              >
+                                {p.inStock ? 'In Stock' : 'Out of Stock'}
+                              </button>
+                            </td>
+
+                            <td className="text-end">
+                              <button
+                                onClick={() => deleteProduct(p.id)}
+                                className="btn btn-sm btn-light text-danger rounded-circle p-2 shadow-sm border"
+                                title="Delete Item"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

@@ -20,7 +20,8 @@ import {
   QrCode,
   Wallet,
   Building2,
-  PackageCheck
+  PackageCheck,
+  MessageSquare
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -31,9 +32,9 @@ export default function CheckoutPage() {
 
   // Form State Step 1: Address
   const [addressForm, setAddressForm] = useState({
-    fullName: 'Ananya Sharma',
-    mobile: '9876543210',
-    email: 'ananya@example.com',
+    fullName: 'Sanjay Kumar',
+    mobile: '8707375679',
+    email: 'sanjay@freshvana.com',
     address: 'Flat 402, Green Meadows, Organic Park Road',
     landmark: 'Near Lotus Lake',
     city: 'Mumbai',
@@ -47,11 +48,20 @@ export default function CheckoutPage() {
 
   // Form State Step 3: Payment
   const [paymentMethod, setPaymentMethod] = useState<'upi' | 'card' | 'netbanking' | 'cod'>('upi');
-  const [upiId, setUpiId] = useState('ananya@okaxis');
+  const [upiId, setUpiId] = useState('sanjay@okaxis');
 
   // Order Result State Step 4
   const [orderConfirmed, setOrderConfirmed] = useState<boolean>(false);
   const [orderId, setOrderId] = useState<string>('');
+  const [whatsappMsg, setWhatsappMsg] = useState<string>('');
+
+  const sendOrderToWhatsApp = (msgText?: string) => {
+    const textToSend = msgText || whatsappMsg;
+    if (!textToSend) return;
+    const encoded = encodeURIComponent(textToSend);
+    const targetNumber = '918707375679';
+    window.open(`https://api.whatsapp.com/send?phone=${targetNumber}&text=${encoded}`, '_blank');
+  };
 
   const handleNextStep = () => {
     if (currentStep < 3) {
@@ -60,8 +70,42 @@ export default function CheckoutPage() {
       // Place Order Step
       const newOrderId = `FV-${Math.floor(10000 + Math.random() * 90000)}`;
       setOrderId(newOrderId);
+
+      // Construct WhatsApp Order details message
+      const itemsList = cart
+        .map(
+          (item, idx) =>
+            `${idx + 1}. *${item.product.name}* (${item.selectedWeight}) x ${item.quantity} = ₹${item.itemPrice * item.quantity}`
+        )
+        .join('\n');
+
+      const messageText = `🌿 *FRESHVANA NEW ORDER DETAILS* 🌿
+-----------------------------------
+*Order Reference ID:* ${newOrderId}
+*Customer Name:* ${addressForm.fullName}
+*Customer Mobile:* ${addressForm.mobile}
+*Delivery Address:* ${addressForm.address}, ${addressForm.landmark ? addressForm.landmark + ', ' : ''}${addressForm.city}, ${addressForm.state} - ${addressForm.pincode}
+*Delivery Slot:* ${deliveryDate} (${timeSlot})
+*Payment Method:* ${paymentMethod.toUpperCase()}
+
+📦 *ORDERED PRODUCE:*
+${itemsList}
+
+-----------------------------------
+*Subtotal:* ₹${subtotal}
+*Discount:* ${couponDiscountAmount > 0 ? `-₹${couponDiscountAmount}` : '₹0'}
+*Delivery Charge:* ${deliveryFee === 0 ? 'FREE' : `₹${deliveryFee}`}
+-----------------------------------
+💰 *FINAL TOTAL PRICE:* ₹${totalAmount}
+-----------------------------------
+Thank you for your organic order! 🍎🥦`;
+
+      setWhatsappMsg(messageText);
       setOrderConfirmed(true);
       setCurrentStep(4);
+
+      // Automatically launch WhatsApp link for 8707375679
+      sendOrderToWhatsApp(messageText);
 
       // Trigger Confetti Celebration!
       try {
@@ -203,7 +247,17 @@ export default function CheckoutPage() {
             </div>
 
             <div className="d-flex flex-wrap justify-content-center gap-3">
-              <Link href="/shop" className="btn btn-success rounded-pill px-5 py-3 fw-bold">
+              <button
+                type="button"
+                onClick={() => sendOrderToWhatsApp()}
+                className="btn rounded-pill px-4 py-3 fw-bold text-white d-flex align-items-center gap-2 shadow-sm"
+                style={{ background: '#25D366', border: 'none' }}
+              >
+                <MessageSquare size={20} />
+                <span>Send / Resend Order Details on WhatsApp (8707375679)</span>
+              </button>
+
+              <Link href="/shop" className="btn btn-outline-success rounded-pill px-5 py-3 fw-bold">
                 Continue Fresh Shopping
               </Link>
             </div>

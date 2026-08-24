@@ -41,7 +41,12 @@ export const CategoryGrid: React.FC = () => {
   };
 
   const handleCategoryClick = (catId: string) => {
-    router.push(`/shop?category=${catId}`);
+    const marketplaceEl = document.getElementById('marketplace');
+    if (marketplaceEl) {
+      marketplaceEl.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      router.push(`/shop?category=${catId}`);
+    }
   };
 
   return (

@@ -3,39 +3,73 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
-import { User, Mail, Lock, ShieldCheck, Leaf, ShieldAlert, ArrowRight } from 'lucide-react';
+import { User, Mail, Lock, ShieldCheck, Leaf, ShieldAlert, ArrowRight, CheckCircle2, AlertCircle, Key } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, register } = useAuth();
   const [isRegister, setIsRegister] = useState(false);
   const [isAdminMode, setIsAdminMode] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
-    name: 'Sanjay',
-    email: 'sanjay@freshvana.com',
-    phone: '',
+    name: 'Sanjay Kumar',
+    emailOrPhone: 'sanjay@freshvana.com',
     password: 'password123'
   });
 
+  const handleQuickFillAdmin = () => {
+    setIsAdminMode(true);
+    setIsRegister(false);
+    setErrorMessage(null);
+    setFormData({
+      name: 'Super Admin (Sanjay)',
+      emailOrPhone: 'admin@freshvana.com',
+      password: 'password123'
+    });
+  };
+
+  const handleQuickFillCustomer = () => {
+    setIsAdminMode(false);
+    setIsRegister(false);
+    setErrorMessage(null);
+    setFormData({
+      name: 'Sanjay Kumar',
+      emailOrPhone: 'sanjay@freshvana.com',
+      password: 'password123'
+    });
+  };
+
   const handleAuthSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
 
-    const role = isAdminMode || formData.email.toLowerCase().includes('admin') ? 'admin' : 'customer';
-    login(formData.email || 'sanjay@freshvana.com', role, formData.name || 'Sanjay');
+    const targetRole = isAdminMode ? 'admin' : 'customer';
+
+    if (isRegister) {
+      const res = register(formData.name, formData.emailOrPhone, formData.password, targetRole);
+      if (!res.success && res.message) {
+        setErrorMessage(res.message);
+      }
+    } else {
+      const res = login(formData.emailOrPhone, formData.password, targetRole, formData.name);
+      if (!res.success && res.message) {
+        setErrorMessage(res.message);
+      }
+    }
   };
 
   return (
     <div
       className="min-vh-100 d-flex align-items-center justify-content-center py-5 px-3 position-relative overflow-hidden"
       style={{
-        backgroundImage: 'linear-gradient(180deg, rgba(4, 57, 29, 0.82) 0%, rgba(6, 78, 40, 0.85) 50%, rgba(10, 104, 54, 0.88) 100%), url(/images/login_bg.png)',
+        backgroundImage: 'linear-gradient(180deg, rgba(4, 57, 29, 0.84) 0%, rgba(6, 78, 40, 0.88) 50%, rgba(10, 104, 54, 0.90) 100%), url(/images/login_bg.png)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
       }}
     >
-      {/* 1. TOP LEFT CORNER: Floating Cutout (c4.png) */}
+      {/* 1. TOP LEFT CORNER: Floating Cutout */}
       <motion.div
         animate={{ y: [0, 18, 0], rotate: [0, -4, 0] }}
         transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
@@ -58,7 +92,7 @@ export default function LoginPage() {
         />
       </motion.div>
 
-      {/* 2. TOP RIGHT CORNER: Floating Cutout (c5.png / broccoli.png) */}
+      {/* 2. TOP RIGHT CORNER: Floating Cutout */}
       <motion.div
         animate={{ y: [0, -16, 0], rotate: [0, 5, 0] }}
         transition={{ duration: 6.5, repeat: Infinity, ease: 'easeInOut' }}
@@ -81,7 +115,7 @@ export default function LoginPage() {
         />
       </motion.div>
 
-      {/* 3. BOTTOM LEFT CORNER: Floating Cutout (c3.png / carrots.png) */}
+      {/* 3. BOTTOM LEFT CORNER: Floating Cutout */}
       <motion.div
         animate={{ y: [0, -15, 0], rotate: [0, 3, 0] }}
         transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
@@ -97,14 +131,14 @@ export default function LoginPage() {
       >
         <Image
           src="/images/c3.png"
-          alt="Fresh Farm Carrots & Produce"
+          alt="Fresh Farm Carrots"
           fill
           className="object-fit-contain"
           style={{ mixBlendMode: 'multiply' }}
         />
       </motion.div>
 
-      {/* 4. BOTTOM RIGHT CORNER: Floating Cutout (c1.png) */}
+      {/* 4. BOTTOM RIGHT CORNER: Floating Cutout */}
       <motion.div
         animate={{ y: [0, 15, 0], rotate: [0, -3, 0] }}
         transition={{ duration: 7.5, repeat: Infinity, ease: 'easeInOut' }}
@@ -129,7 +163,7 @@ export default function LoginPage() {
       </motion.div>
 
       {/* Main Glassmorphic Login Form Container */}
-      <div className="container position-relative" style={{ zIndex: 5 }}>
+      <div className="container position-relative" style={{ zIndex: 5, marginTop: '70px', marginBottom: '40px' }}>
         <div className="row justify-content-center">
           <div className="col-12 col-md-8 col-lg-5">
             <motion.div
@@ -159,28 +193,62 @@ export default function LoginPage() {
                 </h3>
                 <p className="text-muted small mb-0">
                   {isAdminMode
-                    ? 'Sign in to upload, edit & manage produce inventory'
+                    ? 'Super Admin Sign In for produce, inventory & storefront control'
                     : isRegister
                     ? 'Create your free account for organic delivery'
                     : 'Sign in to access your orders and rewards'}
                 </p>
               </div>
 
+              {/* Demo Quick Fill Buttons */}
+              <div className="p-3 bg-light rounded-4 border mb-4">
+                <div className="d-flex align-items-center gap-1 text-dark fw-bold small mb-2">
+                  <Key size={16} className="text-success" />
+                  <span>1-CLICK DEMO LOGIN AUTOFILL</span>
+                </div>
+                <div className="d-flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={handleQuickFillAdmin}
+                    className="btn btn-sm btn-dark rounded-pill px-3 py-1 fw-bold text-white small d-flex align-items-center gap-1 shadow-sm"
+                  >
+                    <ShieldAlert size={14} className="text-warning" />
+                    <span>Demo Super Admin</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleQuickFillCustomer}
+                    className="btn btn-sm btn-success rounded-pill px-3 py-1 fw-bold text-white small d-flex align-items-center gap-1 shadow-sm"
+                    style={{ background: '#0A6836', border: 'none' }}
+                  >
+                    <User size={14} />
+                    <span>Demo Customer</span>
+                  </button>
+                </div>
+              </div>
+
               {/* Account Mode Selector Tabs */}
-              <div className="d-flex align-items-center justify-content-center gap-2 mb-4">
+              <div className="d-flex align-items-center justify-content-center gap-2 mb-3">
                 <button
                   type="button"
-                  onClick={() => setIsAdminMode(false)}
+                  onClick={() => {
+                    setIsAdminMode(false);
+                    setErrorMessage(null);
+                  }}
                   className={`btn btn-sm rounded-pill px-3 py-2 fw-bold ${
                     !isAdminMode ? 'btn-success text-white shadow-sm' : 'btn-light text-muted border'
                   }`}
                   style={!isAdminMode ? { background: '#0A6836', border: 'none' } : {}}
                 >
-                  Customer Login
+                  Customer Access
                 </button>
                 <button
                   type="button"
-                  onClick={() => setIsAdminMode(true)}
+                  onClick={() => {
+                    setIsAdminMode(true);
+                    setErrorMessage(null);
+                  }}
                   className={`btn btn-sm rounded-pill px-3 py-2 fw-bold ${
                     isAdminMode ? 'btn-dark text-white shadow-sm' : 'btn-light text-muted border'
                   }`}
@@ -190,75 +258,87 @@ export default function LoginPage() {
               </div>
 
               {/* Form Mode Switcher Tabs */}
-              {!isAdminMode && (
-                <div className="d-flex rounded-pill bg-light p-1 border mb-4">
-                  <button
-                    type="button"
-                    onClick={() => setIsRegister(false)}
-                    className={`btn btn-sm rounded-pill flex-grow-1 py-2 fw-bold ${
-                      !isRegister ? 'btn-success text-white shadow-sm' : 'btn-light text-muted border-0'
-                    }`}
-                    style={!isRegister ? { background: '#0A6836', border: 'none' } : {}}
-                  >
-                    Sign In
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsRegister(true)}
-                    className={`btn btn-sm rounded-pill flex-grow-1 py-2 fw-bold ${
-                      isRegister ? 'btn-success text-white shadow-sm' : 'btn-light text-muted border-0'
-                    }`}
-                    style={isRegister ? { background: '#0A6836', border: 'none' } : {}}
-                  >
-                    Register
-                  </button>
+              <div className="d-flex rounded-pill bg-light p-1 border mb-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsRegister(false);
+                    setErrorMessage(null);
+                  }}
+                  className={`btn btn-sm rounded-pill flex-grow-1 py-2 fw-bold ${
+                    !isRegister ? 'btn-success text-white shadow-sm' : 'btn-light text-muted border-0'
+                  }`}
+                  style={!isRegister ? { background: isAdminMode ? '#111827' : '#0A6836', border: 'none' } : {}}
+                >
+                  Sign In
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsRegister(true);
+                    setErrorMessage(null);
+                  }}
+                  className={`btn btn-sm rounded-pill flex-grow-1 py-2 fw-bold ${
+                    isRegister ? 'btn-success text-white shadow-sm' : 'btn-light text-muted border-0'
+                  }`}
+                  style={isRegister ? { background: isAdminMode ? '#111827' : '#0A6836', border: 'none' } : {}}
+                >
+                  Register / Sign Up
+                </button>
+              </div>
+
+              {/* Error Alert Display */}
+              {errorMessage && (
+                <div className="alert alert-danger rounded-4 d-flex align-items-center gap-2 small fw-semibold mb-4">
+                  <AlertCircle size={18} className="flex-shrink-0" />
+                  <span>{errorMessage}</span>
                 </div>
               )}
 
               {/* Login / Register Form */}
               <form onSubmit={handleAuthSubmit}>
                 <div className="d-flex flex-column gap-3 mb-4">
-                  {/* Dynamic User Name Input */}
-                  {!isAdminMode && (
-                    <div>
-                      <label className="form-label fw-bold text-dark small mb-1">
-                        Your Full Name (e.g. Sanjay, Rahul, Priya)
-                      </label>
-                      <div className="input-group border rounded-3 overflow-hidden">
-                        <span className="input-group-text bg-light border-0 text-muted ps-3">
-                          <User size={18} />
-                        </span>
-                        <input
-                          type="text"
-                          className="form-control border-0 py-2 small shadow-none text-dark fw-semibold"
-                          placeholder="Enter your name (e.g. Sanjay)"
-                          value={formData.name}
-                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          required
-                        />
-                      </div>
-                    </div>
-                  )}
-
+                  {/* Full Name Input */}
                   <div>
                     <label className="form-label fw-bold text-dark small mb-1">
-                      {isAdminMode ? 'Super Admin Email' : 'Email or Mobile Number'}
+                      Full Name
+                    </label>
+                    <div className="input-group border rounded-3 overflow-hidden">
+                      <span className="input-group-text bg-light border-0 text-muted ps-3">
+                        <User size={18} />
+                      </span>
+                      <input
+                        type="text"
+                        className="form-control border-0 py-2 small shadow-none text-dark fw-semibold"
+                        placeholder="e.g. Sanjay Kumar"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Email / Mobile Input */}
+                  <div>
+                    <label className="form-label fw-bold text-dark small mb-1">
+                      {isAdminMode ? 'Super Admin Email or Phone' : 'Email Address or Mobile Number'}
                     </label>
                     <div className="input-group border rounded-3 overflow-hidden">
                       <span className="input-group-text bg-light border-0 text-muted ps-3">
                         <Mail size={18} />
                       </span>
                       <input
-                        type="email"
-                        className="form-control border-0 py-2 small shadow-none"
-                        placeholder={isAdminMode ? 'admin@freshvana.com' : 'user@example.com'}
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        type="text"
+                        className="form-control border-0 py-2 small shadow-none text-dark fw-semibold"
+                        placeholder={isAdminMode ? 'admin@freshvana.com or 8707375679' : 'sanjay@freshvana.com or 9876543210'}
+                        value={formData.emailOrPhone}
+                        onChange={(e) => setFormData({ ...formData, emailOrPhone: e.target.value })}
                         required
                       />
                     </div>
                   </div>
 
+                  {/* Password Input */}
                   <div>
                     <label className="form-label fw-bold text-dark small mb-1">Password</label>
                     <div className="input-group border rounded-3 overflow-hidden">
@@ -267,7 +347,7 @@ export default function LoginPage() {
                       </span>
                       <input
                         type="password"
-                        className="form-control border-0 py-2 small shadow-none"
+                        className="form-control border-0 py-2 small shadow-none text-dark fw-semibold"
                         placeholder="••••••••"
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -285,9 +365,11 @@ export default function LoginPage() {
                   style={!isAdminMode ? { background: '#0A6836' } : {}}
                 >
                   <span>
-                    {isAdminMode
-                      ? 'Enter Super Admin Panel'
-                      : `Sign In as ${formData.name || 'User'} & Go To Home`}
+                    {isRegister
+                      ? `Register New ${isAdminMode ? 'Super Admin' : 'Customer'} Account`
+                      : isAdminMode
+                      ? 'Sign In to Super Admin Control Panel'
+                      : `Sign In as ${formData.name || 'User'} & Continue`}
                   </span>
                   <ArrowRight size={18} />
                 </button>

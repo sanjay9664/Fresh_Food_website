@@ -12,6 +12,8 @@ import { useQuickView } from '@/context/QuickViewContext';
 import { Star, ChevronLeft, ChevronRight, Award } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+import { HomeProduceMarketplace } from '@/components/home/HomeProduceMarketplace';
+
 export default function HomePage() {
   const { openQuickView } = useQuickView();
 
@@ -67,10 +69,13 @@ export default function HomePage() {
       {/* 2. Category Grid */}
       <CategoryGrid />
 
-      {/* 3. Grand Flash Sale Hero Banner */}
+      {/* 3. Live Direct Farm Produce Marketplace (All Fruits & Vegetables Ordering) */}
+      <HomeProduceMarketplace />
+
+      {/* 4. Grand Flash Sale Hero Banner */}
       <FlashSale />
 
-      {/* 4. Best Selling Products */}
+      {/* 5. Best Selling Products */}
       <BestSellers onQuickView={openQuickView} />
 
       {/* 5. 3 Promo Banners Row */}

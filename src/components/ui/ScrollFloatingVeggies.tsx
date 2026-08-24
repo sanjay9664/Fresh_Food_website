@@ -14,7 +14,13 @@ export const ScrollFloatingVeggies: React.FC = () => {
   const rotate2 = useTransform(scrollY, [0, 2000], [0, -220]);
 
   return (
-    <div className="position-absolute top-0 start-0 w-100 h-100 pointer-events-none overflow-hidden" style={{ zIndex: 1 }}>
+    // This decoration spans the full home page. It must never sit in front of
+    // buttons/links and capture taps on product cards.
+    <div
+      className="position-absolute top-0 start-0 w-100 h-100 overflow-hidden"
+      style={{ zIndex: 1, pointerEvents: 'none' }}
+      aria-hidden="true"
+    >
       {/* Floating SVG Element 1 */}
       <motion.div
         style={{ y: y1, rotate: rotate1, top: '25%', left: '2%', opacity: 0.15 }}

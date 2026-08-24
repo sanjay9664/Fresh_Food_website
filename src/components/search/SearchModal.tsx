@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { products } from '@/data/products';
+import { useProducts } from '@/context/ProductContext';
 import { Product } from '@/types';
 import { Search, X, Star, ArrowRight, TrendingUp, Sparkles, Leaf } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,6 +15,7 @@ interface SearchModalProps {
 }
 
 export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onSelectProduct }) => {
+  const { products } = useProducts();
   const [query, setQuery] = useState('');
 
   if (!isOpen) return null;

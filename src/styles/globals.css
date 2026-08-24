@@ -28,6 +28,11 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Decorative layers must never block taps/clicks on the content below them. */
+.pointer-events-none {
+  pointer-events: none !important;
+}
+
 h1, h2, h3, h4, h5, h6, .font-heading {
   font-family: var(--font-heading);
   color: var(--text-dark);
@@ -218,24 +223,85 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 }
 
 @media (max-width: 575.98px) {
+  body {
+    padding-bottom: 70px !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+
   .top-bar-v2 {
     font-size: 0.68rem;
+    padding: 3px 0;
   }
 
   .glass-header-v2 {
-    top: 24px !important;
+    top: 22px !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
   }
 
   .hero-carousel-section {
-    padding-top: 92px !important;
-    padding-bottom: 15px !important;
+    padding-top: 86px !important;
+    padding-bottom: 12px !important;
   }
 
   .hero-image-container {
-    height: 210px !important;
+    height: 190px !important;
   }
 
   .brand-text {
-    font-size: 1.3rem !important;
+    font-size: 1.25rem !important;
   }
+
+  /* Product Card Mobile Native App Polish */
+  .product-card-v2 {
+    padding: 10px !important;
+    border-radius: 16px !important;
+  }
+
+  .product-card-v2 .img-box {
+    height: 125px !important;
+    border-radius: 12px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .product-card-v2 h6 {
+    font-size: 0.84rem !important;
+    line-height: 1.2 !important;
+    margin-bottom: 4px !important;
+  }
+
+  .product-card-v2 .badge-discount-v2, .product-card-v2 .badge-discount-tag {
+    font-size: 0.6rem !important;
+    padding: 2px 6px !important;
+  }
+
+  .product-card-v2 .btn-xs {
+    font-size: 0.62rem !important;
+    padding: 1px 5px !important;
+  }
+
+  /* Toast position on Mobile above bottom navigation */
+  .toast-freshvana {
+    bottom: 76px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 90% !important;
+    max-width: 380px !important;
+    text-align: center !important;
+  }
+}
+
+/* Toast Notification Styling */
+.toast-freshvana {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  background: #064E28;
+  color: #FFFFFF;
+  padding: 12px 24px;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  z-index: 1080;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }

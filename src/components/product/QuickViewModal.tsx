@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Product } from '@/types';
@@ -15,17 +15,32 @@ interface QuickViewModalProps {
 }
 
 export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => {
-  const { addToCart, setIsCartOpen } = useCart();
+  const { cart, addToCart, updateQuantity, removeFromCart, setIsCartOpen } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
   const [selectedWeight, setSelectedWeight] = useState<string>(product?.weights[0] || '1kg');
   const [activeImage, setActiveImage] = useState<string>(product?.image || '');
   const [quantity, setQuantity] = useState<number>(1);
 
+  // This modal is shared by every home and shop card. Reset local controls
+  // whenever a new product is opened so the selected weight always matches it.
+  useEffect(() => {
+    if (product) {
+      setSelectedWeight(product.weights[0] || '1kg');
+      setActiveImage(product.image);
+      setQuantity(1);
+    }
+  }, [product]);
+
   if (!product) return null;
 
   const currentImage = activeImage || product.image;
   const isWishlisted = isInWishlist(product.id);
+
+  const cartItem = cart.find(
+    (item) => item.product.id === product.id && item.selectedWeight === selectedWeight
+  );
+  const currentQty = cartItem ? cartItem.quantity : quantity;
 
   const getMultiplier = (w: string) => {
     if (w === '250g') return 0.25;
@@ -39,9 +54,34 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose
   const calculatedPrice = Math.round(product.price * getMultiplier(selectedWeight));
   const calculatedOriginalPrice = Math.round(product.originalPrice * getMultiplier(selectedWeight));
 
+  const handleMinus = () => {
+    if (cartItem) {
+      if (cartItem.quantity > 1) {
+        updateQuantity(product.id, selectedWeight, cartItem.quantity - 1);
+      } else {
+        removeFromCart(product.id, selectedWeight);
+      }
+    } else {
+      setQuantity((prev) => Math.max(1, prev - 1));
+    }
+  };
+
+  const handlePlus = () => {
+    if (cartItem) {
+      updateQuantity(product.id, selectedWeight, cartItem.quantity + 1);
+    } else {
+      setQuantity((prev) => prev + 1);
+    }
+  };
+
   const handleAddToCart = () => {
-    addToCart(product, selectedWeight, quantity);
+    if (cartItem) {
+      updateQuantity(product.id, selectedWeight, cartItem.quantity + 1);
+    } else {
+      addToCart(product, selectedWeight, quantity);
+    }
     onClose();
+    setIsCartOpen(true);
   };
 
   return (
@@ -138,11 +178,11 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose
                 {/* Price Display */}
                 <div className="d-flex align-items-baseline gap-3 mb-4 p-3 bg-light rounded-3 border">
                   <span className="font-heading fs-3 fw-extrabold text-success">
-                    ₹{calculatedPrice * quantity}
+                    ₹{calculatedPrice * currentQty}
                   </span>
                   {calculatedOriginalPrice > calculatedPrice && (
                     <span className="text-decoration-line-through text-muted fs-5">
-                      ₹{calculatedOriginalPrice * quantity}
+                      ₹{calculatedOriginalPrice * currentQty}
                     </span>
                   )}
                   <span className="badge bg-danger ms-auto">
@@ -178,15 +218,21 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose
                   <span className="fw-bold small text-dark">QTY:</span>
                   <div className="d-flex align-items-center border rounded-pill px-3 py-1 bg-light">
                     <button
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="btn btn-sm btn-link p-0 text-dark"
+                      type="button"
+                      onClick={handleMinus}
+                      className="btn btn-sm btn-light rounded-circle p-1 text-dark border-0 d-flex align-items-center justify-content-center"
+                      style={{ width: '28px', height: '28px' }}
+                      title="Decrease / Remove"
                     >
                       <Minus size={14} />
                     </button>
-                    <span className="px-3 fw-bold small">{quantity}</span>
+                    <span className="px-3 fw-bold small">{currentQty}</span>
                     <button
-                      onClick={() => setQuantity(quantity + 1)}
-                      className="btn btn-sm btn-link p-0 text-dark"
+                      type="button"
+                      onClick={handlePlus}
+                      className="btn btn-sm btn-light rounded-circle p-1 text-dark border-0 d-flex align-items-center justify-content-center"
+                      style={{ width: '28px', height: '28px' }}
+                      title="Increase Quantity"
                     >
                       <Plus size={14} />
                     </button>
@@ -200,10 +246,10 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose
                   <button
                     onClick={handleAddToCart}
                     className="btn btn-success rounded-pill py-3 flex-grow-1 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm"
-                    style={{ background: '#0A6836', border: 'none' }}
+                    style={{ background: cartItem ? '#064E28' : '#0A6836', border: 'none' }}
                   >
                     <ShoppingBag size={18} />
-                    <span>Add to Basket (₹{calculatedPrice * quantity})</span>
+                    <span>{cartItem ? `In Basket (${currentQty}) • ₹${calculatedPrice * currentQty}` : `Add to Basket (₹${calculatedPrice * currentQty})`}</span>
                   </button>
 
                   <button

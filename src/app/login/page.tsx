@@ -3,36 +3,43 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
-import { User, Mail, Lock, ShieldCheck, Leaf, ShieldAlert, ArrowRight, CheckCircle2, AlertCircle, Key } from 'lucide-react';
-import { motion } from 'framer-motion';
+import {
+  User,
+  Mail,
+  Lock,
+  Leaf,
+  ShieldAlert,
+  ArrowRight,
+  AlertCircle,
+  Eye,
+  EyeOff,
+  CheckCircle2,
+  Sparkles,
+  Key
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function LoginPage() {
   const { login, register } = useAuth();
   const [isRegister, setIsRegister] = useState(false);
   const [isAdminMode, setIsAdminMode] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
-    name: 'Sanjay Kumar',
-    emailOrPhone: 'sanjay@freshvana.com',
-    password: 'password123'
+    name: '',
+    emailOrPhone: '',
+    password: ''
   });
 
-  const handleQuickFillAdmin = () => {
-    setIsAdminMode(true);
-    setIsRegister(false);
-    setErrorMessage(null);
-    setFormData({
-      name: 'Super Admin (Sanjay)',
-      emailOrPhone: 'admin@freshvana.com',
-      password: 'password123'
-    });
-  };
-
+  // Quick autofills
   const handleQuickFillCustomer = () => {
     setIsAdminMode(false);
     setIsRegister(false);
     setErrorMessage(null);
+    setSuccessMessage(null);
     setFormData({
       name: 'Sanjay Kumar',
       emailOrPhone: 'sanjay@freshvana.com',
@@ -40,22 +47,58 @@ export default function LoginPage() {
     });
   };
 
-  const handleAuthSubmit = (e: React.FormEvent) => {
+  const handleQuickFillAdmin = () => {
+    setIsAdminMode(true);
+    setIsRegister(false);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setFormData({
+      name: 'Super Admin',
+      emailOrPhone: 'admin@freshvana.com',
+      password: 'password123'
+    });
+  };
+
+  const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setSuccessMessage(null);
+    setIsSubmitting(true);
 
     const targetRole = isAdminMode ? 'admin' : 'customer';
 
-    if (isRegister) {
-      const res = register(formData.name, formData.emailOrPhone, formData.password, targetRole);
-      if (!res.success && res.message) {
-        setErrorMessage(res.message);
+    try {
+      if (isRegister) {
+        const res = await register(
+          formData.name || 'User',
+          formData.emailOrPhone,
+          formData.password,
+          targetRole
+        );
+
+        if (!res.success && res.message) {
+          setErrorMessage(res.message);
+        } else if (res.success) {
+          setSuccessMessage('Account created successfully!');
+        }
+      } else {
+        const res = await login(
+          formData.emailOrPhone,
+          formData.password,
+          targetRole,
+          formData.name
+        );
+
+        if (!res.success && res.message) {
+          setErrorMessage(res.message);
+        } else if (res.success) {
+          setSuccessMessage('Welcome back! Logging in...');
+        }
       }
-    } else {
-      const res = login(formData.emailOrPhone, formData.password, targetRole, formData.name);
-      if (!res.success && res.message) {
-        setErrorMessage(res.message);
-      }
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'An unexpected error occurred.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -63,327 +106,278 @@ export default function LoginPage() {
     <div
       className="min-vh-100 d-flex align-items-center justify-content-center py-5 px-3 position-relative overflow-hidden"
       style={{
-        backgroundImage: 'linear-gradient(180deg, rgba(4, 57, 29, 0.84) 0%, rgba(6, 78, 40, 0.88) 50%, rgba(10, 104, 54, 0.90) 100%), url(/images/login_bg.png)',
+        backgroundImage: 'linear-gradient(135deg, #04391d 0%, #064e28 50%, #0a6836 100%)',
         backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
+        backgroundPosition: 'center'
       }}
     >
-      {/* 1. TOP LEFT CORNER: Floating Cutout */}
-      <motion.div
-        animate={{ y: [0, 18, 0], rotate: [0, -4, 0] }}
-        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
-        className="position-absolute d-none d-lg-block pointer-events-none"
+      {/* Soft Glow Orbs */}
+      <div
+        className="position-absolute rounded-circle pointer-events-none"
         style={{
-          width: '320px',
-          height: '320px',
-          top: '3%',
-          left: '3%',
-          zIndex: 2,
-          filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.4))'
+          width: '450px',
+          height: '450px',
+          background: 'radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, rgba(0,0,0,0) 70%)',
+          top: '-80px',
+          left: '-80px',
+          zIndex: 1
         }}
-      >
-        <Image
-          src="/images/c4.png"
-          alt="Organic Red Capsicum"
-          fill
-          className="object-fit-contain"
-          style={{ mixBlendMode: 'multiply' }}
-        />
-      </motion.div>
+      />
+      <div
+        className="position-absolute rounded-circle pointer-events-none"
+        style={{
+          width: '500px',
+          height: '500px',
+          background: 'radial-gradient(circle, rgba(234, 179, 8, 0.15) 0%, rgba(0,0,0,0) 70%)',
+          bottom: '-100px',
+          right: '-100px',
+          zIndex: 1
+        }}
+      />
 
-      {/* 2. TOP RIGHT CORNER: Floating Cutout */}
+      {/* Floating Organic Vegetables */}
       <motion.div
-        animate={{ y: [0, -16, 0], rotate: [0, 5, 0] }}
+        animate={{ y: [0, 12, 0], rotate: [0, -3, 0] }}
         transition={{ duration: 6.5, repeat: Infinity, ease: 'easeInOut' }}
         className="position-absolute d-none d-lg-block pointer-events-none"
-        style={{
-          width: '340px',
-          height: '340px',
-          top: '2%',
-          right: '3%',
-          zIndex: 2,
-          filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.4))'
-        }}
+        style={{ width: '250px', height: '250px', top: '5%', left: '5%', zIndex: 2 }}
       >
-        <Image
-          src="/images/c5.png"
-          alt="Fresh Organic Produce"
-          fill
-          className="object-fit-contain"
-          style={{ mixBlendMode: 'multiply' }}
-        />
+        <Image src="/images/c4.png" alt="Fresh Produce" fill className="object-fit-contain" />
       </motion.div>
 
-      {/* 3. BOTTOM LEFT CORNER: Floating Cutout */}
       <motion.div
-        animate={{ y: [0, -15, 0], rotate: [0, 3, 0] }}
+        animate={{ y: [0, -12, 0], rotate: [0, 3, 0] }}
         transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
         className="position-absolute d-none d-lg-block pointer-events-none"
-        style={{
-          width: '360px',
-          height: '360px',
-          bottom: '2%',
-          left: '3%',
-          zIndex: 2,
-          filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.4))'
-        }}
+        style={{ width: '270px', height: '270px', bottom: '5%', right: '5%', zIndex: 2 }}
       >
-        <Image
-          src="/images/c3.png"
-          alt="Fresh Farm Carrots"
-          fill
-          className="object-fit-contain"
-          style={{ mixBlendMode: 'multiply' }}
-        />
+        <Image src="/images/c1.png" alt="Fresh Vegetables" fill className="object-fit-contain" priority />
       </motion.div>
 
-      {/* 4. BOTTOM RIGHT CORNER: Floating Cutout */}
-      <motion.div
-        animate={{ y: [0, 15, 0], rotate: [0, -3, 0] }}
-        transition={{ duration: 7.5, repeat: Infinity, ease: 'easeInOut' }}
-        className="position-absolute d-none d-lg-block pointer-events-none"
-        style={{
-          width: '420px',
-          height: '420px',
-          bottom: '2%',
-          right: '2%',
-          zIndex: 2,
-          filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.4))'
-        }}
-      >
-        <Image
-          src="/images/c1.png"
-          alt="Fresh Vegetable Basket"
-          fill
-          className="object-fit-contain"
-          priority
-          style={{ mixBlendMode: 'multiply' }}
-        />
-      </motion.div>
-
-      {/* Main Glassmorphic Login Form Container */}
-      <div className="container position-relative" style={{ zIndex: 5, marginTop: '70px', marginBottom: '40px' }}>
-        <div className="row justify-content-center">
-          <div className="col-12 col-md-8 col-lg-5">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="bg-white rounded-5 p-4 p-md-5 shadow-2xl border"
-              style={{ borderRadius: '32px', boxShadow: '0 25px 60px rgba(0,0,0,0.35)' }}
+      {/* Elegant Main Login Card */}
+      <div className="w-100 position-relative" style={{ maxWidth: '440px', zIndex: 5 }}>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96, y: 15 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
+          className="bg-white rounded-4 p-4 p-sm-4 shadow-lg border-0"
+          style={{
+            borderRadius: '28px',
+            boxShadow: '0 25px 60px rgba(0, 0, 0, 0.3)'
+          }}
+        >
+          {/* Header */}
+          <div className="text-center mb-4 pt-2">
+            <div
+              className="rounded-circle d-inline-flex align-items-center justify-content-center text-white mb-2 shadow-sm"
+              style={{
+                width: '56px',
+                height: '56px',
+                background: isAdminMode
+                  ? 'linear-gradient(135deg, #111827, #374151)'
+                  : 'linear-gradient(135deg, #0A6836, #10B981)'
+              }}
             >
-              {/* Brand Header */}
-              <div className="text-center mb-4">
-                <div
-                  className="rounded-circle d-inline-flex align-items-center justify-content-center text-white mb-2 shadow-sm"
-                  style={{
-                    width: '64px',
-                    height: '64px',
-                    background: isAdminMode
-                      ? 'linear-gradient(135deg, #111827, #1F2937)'
-                      : 'linear-gradient(135deg, #0A6836, #064E28)'
-                  }}
-                >
-                  {isAdminMode ? <ShieldAlert size={32} /> : <Leaf size={32} />}
-                </div>
+              {isAdminMode ? <ShieldAlert size={28} /> : <Leaf size={28} />}
+            </div>
 
-                <h3 className="font-heading fw-extrabold text-dark mb-1 fs-2">
-                  {isAdminMode ? 'Super Admin Portal' : 'FreshVana Account'}
-                </h3>
-                <p className="text-muted small mb-0">
-                  {isAdminMode
-                    ? 'Super Admin Sign In for produce, inventory & storefront control'
-                    : isRegister
-                    ? 'Create your free account for organic delivery'
-                    : 'Sign in to access your orders and rewards'}
-                </p>
-              </div>
+            <h3 className="fw-bold text-dark mb-1 fs-4">
+              {isAdminMode ? 'Admin Portal' : isRegister ? 'Create Account' : 'Welcome Back'}
+            </h3>
+            <p className="text-muted small mb-0">
+              {isAdminMode
+                ? 'Sign in with super admin privileges'
+                : isRegister
+                ? 'Sign up to order fresh organic produce'
+                : 'Sign in to access your FreshVana account'}
+            </p>
+          </div>
 
-              {/* Demo Quick Fill Buttons */}
-              <div className="p-3 bg-light rounded-4 border mb-4">
-                <div className="d-flex align-items-center gap-1 text-dark fw-bold small mb-2">
-                  <Key size={16} className="text-success" />
-                  <span>1-CLICK DEMO LOGIN AUTOFILL</span>
-                </div>
-                <div className="d-flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={handleQuickFillAdmin}
-                    className="btn btn-sm btn-dark rounded-pill px-3 py-1 fw-bold text-white small d-flex align-items-center gap-1 shadow-sm"
-                  >
-                    <ShieldAlert size={14} className="text-warning" />
-                    <span>Demo Super Admin</span>
-                  </button>
+          {/* Segmented Control (Sign In vs Create Account) */}
+          <div
+            className="d-flex rounded-pill bg-light p-1 mb-4 border"
+            style={{ background: '#F3F4F6' }}
+          >
+            <button
+              type="button"
+              onClick={() => {
+                setIsRegister(false);
+                setErrorMessage(null);
+                setSuccessMessage(null);
+              }}
+              className={`btn btn-sm rounded-pill flex-grow-1 py-2 fw-semibold border-0 transition-all ${
+                !isRegister ? 'bg-white text-dark shadow-sm' : 'text-muted'
+              }`}
+            >
+              Sign In
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsRegister(true);
+                setErrorMessage(null);
+                setSuccessMessage(null);
+              }}
+              className={`btn btn-sm rounded-pill flex-grow-1 py-2 fw-semibold border-0 transition-all ${
+                isRegister ? 'bg-white text-dark shadow-sm' : 'text-muted'
+              }`}
+            >
+              Register
+            </button>
+          </div>
 
-                  <button
-                    type="button"
-                    onClick={handleQuickFillCustomer}
-                    className="btn btn-sm btn-success rounded-pill px-3 py-1 fw-bold text-white small d-flex align-items-center gap-1 shadow-sm"
-                    style={{ background: '#0A6836', border: 'none' }}
-                  >
-                    <User size={14} />
-                    <span>Demo Customer</span>
-                  </button>
-                </div>
-              </div>
+          {/* Alerts */}
+          <AnimatePresence mode="wait">
+            {errorMessage && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="alert alert-danger rounded-3 py-2 px-3 d-flex align-items-center gap-2 small fw-medium mb-3"
+              >
+                <AlertCircle size={16} className="flex-shrink-0" />
+                <span>{errorMessage}</span>
+              </motion.div>
+            )}
 
-              {/* Account Mode Selector Tabs */}
-              <div className="d-flex align-items-center justify-content-center gap-2 mb-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsAdminMode(false);
-                    setErrorMessage(null);
-                  }}
-                  className={`btn btn-sm rounded-pill px-3 py-2 fw-bold ${
-                    !isAdminMode ? 'btn-success text-white shadow-sm' : 'btn-light text-muted border'
-                  }`}
-                  style={!isAdminMode ? { background: '#0A6836', border: 'none' } : {}}
-                >
-                  Customer Access
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsAdminMode(true);
-                    setErrorMessage(null);
-                  }}
-                  className={`btn btn-sm rounded-pill px-3 py-2 fw-bold ${
-                    isAdminMode ? 'btn-dark text-white shadow-sm' : 'btn-light text-muted border'
-                  }`}
-                >
-                  Super Admin Panel
-                </button>
-              </div>
+            {successMessage && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="alert alert-success rounded-3 py-2 px-3 d-flex align-items-center gap-2 small fw-medium mb-3"
+              >
+                <CheckCircle2 size={16} className="flex-shrink-0" />
+                <span>{successMessage}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-              {/* Form Mode Switcher Tabs */}
-              <div className="d-flex rounded-pill bg-light p-1 border mb-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsRegister(false);
-                    setErrorMessage(null);
-                  }}
-                  className={`btn btn-sm rounded-pill flex-grow-1 py-2 fw-bold ${
-                    !isRegister ? 'btn-success text-white shadow-sm' : 'btn-light text-muted border-0'
-                  }`}
-                  style={!isRegister ? { background: isAdminMode ? '#111827' : '#0A6836', border: 'none' } : {}}
-                >
-                  Sign In
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsRegister(true);
-                    setErrorMessage(null);
-                  }}
-                  className={`btn btn-sm rounded-pill flex-grow-1 py-2 fw-bold ${
-                    isRegister ? 'btn-success text-white shadow-sm' : 'btn-light text-muted border-0'
-                  }`}
-                  style={isRegister ? { background: isAdminMode ? '#111827' : '#0A6836', border: 'none' } : {}}
-                >
-                  Register / Sign Up
-                </button>
-              </div>
-
-              {/* Error Alert Display */}
-              {errorMessage && (
-                <div className="alert alert-danger rounded-4 d-flex align-items-center gap-2 small fw-semibold mb-4">
-                  <AlertCircle size={18} className="flex-shrink-0" />
-                  <span>{errorMessage}</span>
+          {/* Form */}
+          <form onSubmit={handleAuthSubmit}>
+            <div className="d-flex flex-column gap-3 mb-4">
+              {/* Full Name field (Only in Register mode) */}
+              {isRegister && (
+                <div>
+                  <label className="form-label text-secondary small fw-medium mb-1">Full Name</label>
+                  <div className="input-group border rounded-3 overflow-hidden">
+                    <span className="input-group-text bg-light border-0 text-muted ps-3 pe-2">
+                      <User size={18} />
+                    </span>
+                    <input
+                      type="text"
+                      className="form-control border-0 py-2 small shadow-none text-dark fw-medium"
+                      placeholder="e.g. Sanjay Kumar"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      required={isRegister}
+                    />
+                  </div>
                 </div>
               )}
 
-              {/* Login / Register Form */}
-              <form onSubmit={handleAuthSubmit}>
-                <div className="d-flex flex-column gap-3 mb-4">
-                  {/* Full Name Input */}
-                  <div>
-                    <label className="form-label fw-bold text-dark small mb-1">
-                      Full Name
-                    </label>
-                    <div className="input-group border rounded-3 overflow-hidden">
-                      <span className="input-group-text bg-light border-0 text-muted ps-3">
-                        <User size={18} />
-                      </span>
-                      <input
-                        type="text"
-                        className="form-control border-0 py-2 small shadow-none text-dark fw-semibold"
-                        placeholder="e.g. Sanjay Kumar"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  {/* Email / Mobile Input */}
-                  <div>
-                    <label className="form-label fw-bold text-dark small mb-1">
-                      {isAdminMode ? 'Super Admin Email or Phone' : 'Email Address or Mobile Number'}
-                    </label>
-                    <div className="input-group border rounded-3 overflow-hidden">
-                      <span className="input-group-text bg-light border-0 text-muted ps-3">
-                        <Mail size={18} />
-                      </span>
-                      <input
-                        type="text"
-                        className="form-control border-0 py-2 small shadow-none text-dark fw-semibold"
-                        placeholder={isAdminMode ? 'admin@freshvana.com or 8707375679' : 'sanjay@freshvana.com or 9876543210'}
-                        value={formData.emailOrPhone}
-                        onChange={(e) => setFormData({ ...formData, emailOrPhone: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  {/* Password Input */}
-                  <div>
-                    <label className="form-label fw-bold text-dark small mb-1">Password</label>
-                    <div className="input-group border rounded-3 overflow-hidden">
-                      <span className="input-group-text bg-light border-0 text-muted ps-3">
-                        <Lock size={18} />
-                      </span>
-                      <input
-                        type="password"
-                        className="form-control border-0 py-2 small shadow-none text-dark fw-semibold"
-                        placeholder="••••••••"
-                        value={formData.password}
-                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  className={`btn btn-lg rounded-pill w-100 py-3 fw-bold shadow border-0 text-white d-flex align-items-center justify-content-center gap-2 ${
-                    isAdminMode ? 'btn-dark' : 'btn-success'
-                  }`}
-                  style={!isAdminMode ? { background: '#0A6836' } : {}}
-                >
-                  <span>
-                    {isRegister
-                      ? `Register New ${isAdminMode ? 'Super Admin' : 'Customer'} Account`
-                      : isAdminMode
-                      ? 'Sign In to Super Admin Control Panel'
-                      : `Sign In as ${formData.name || 'User'} & Continue`}
+              {/* Email / Mobile */}
+              <div>
+                <label className="form-label text-secondary small fw-medium mb-1">Email or Mobile</label>
+                <div className="input-group border rounded-3 overflow-hidden">
+                  <span className="input-group-text bg-light border-0 text-muted ps-3 pe-2">
+                    <Mail size={18} />
                   </span>
-                  <ArrowRight size={18} />
-                </button>
-              </form>
-
-              <div className="text-center mt-4 pt-3 border-top">
-                <div className="d-flex align-items-center justify-content-center gap-1 text-muted small">
-                  <ShieldCheck size={16} className="text-success" />
-                  <span>256-Bit Encrypted Secure Sign-In</span>
+                  <input
+                    type="text"
+                    className="form-control border-0 py-2 small shadow-none text-dark fw-medium"
+                    placeholder="name@example.com or 9876543210"
+                    value={formData.emailOrPhone}
+                    onChange={(e) => setFormData({ ...formData, emailOrPhone: e.target.value })}
+                    required
+                  />
                 </div>
               </div>
-            </motion.div>
+
+              {/* Password */}
+              <div>
+                <div className="d-flex align-items-center justify-content-between mb-1">
+                  <label className="form-label text-secondary small fw-medium mb-0">Password</label>
+                  {!isRegister && (
+                    <a
+                      href="#forgot"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        alert('Password reset instructions sent.');
+                      }}
+                      className="text-success extra-small fw-semibold text-decoration-none"
+                    >
+                      Forgot?
+                    </a>
+                  )}
+                </div>
+                <div className="input-group border rounded-3 overflow-hidden">
+                  <span className="input-group-text bg-light border-0 text-muted ps-3 pe-2">
+                    <Lock size={18} />
+                  </span>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    className="form-control border-0 py-2 small shadow-none text-dark fw-medium"
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="btn bg-light border-0 text-muted pe-3 ps-2"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Main Action Button */}
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="btn btn-success btn-lg rounded-pill w-100 py-2.5 fw-bold shadow-sm border-0 text-white d-flex align-items-center justify-content-center gap-2"
+              style={{ background: isAdminMode ? '#111827' : '#0A6836' }}
+            >
+              {isSubmitting ? (
+                <>
+                  <span className="spinner-border spinner-border-sm" role="status"></span>
+                  <span>Processing...</span>
+                </>
+              ) : (
+                <>
+                  <span>{isRegister ? 'Create Account' : isAdminMode ? 'Admin Sign In' : 'Sign In'}</span>
+                  <ArrowRight size={18} />
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Minimal Quick Demo Autofills Footer */}
+          <div className="mt-4 pt-3 border-top text-center">
+            <div className="d-flex align-items-center justify-content-center gap-2 extra-small text-muted mb-2">
+              <Key size={13} className="text-success" />
+              <span>Quick Demo Fill:</span>
+              <button
+                type="button"
+                onClick={handleQuickFillCustomer}
+                className="btn btn-link p-0 text-success fw-bold text-decoration-none extra-small"
+              >
+                Customer
+              </button>
+              <span>•</span>
+              <button
+                type="button"
+                onClick={handleQuickFillAdmin}
+                className="btn btn-link p-0 text-dark fw-bold text-decoration-none extra-small"
+              >
+                Admin
+              </button>
+            </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

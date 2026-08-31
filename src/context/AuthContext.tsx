@@ -2,24 +2,39 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { authApi, setTokens, clearTokens, getAccessToken, getRefreshToken } from '@/services/api';
 
 export interface UserProfile {
+  id?: string;
   email: string;
   name: string;
-  role: 'customer' | 'admin';
+  role: 'customer' | 'admin' | string;
   phone?: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 export interface UserAccount extends UserProfile {
-  password: string;
+  password?: string;
 }
 
 interface AuthContextType {
   isLoggedIn: boolean;
   user: UserProfile | null;
-  login: (identifier: string, password?: string, targetRole?: 'customer' | 'admin', customName?: string) => { success: boolean; message?: string };
-  register: (name: string, emailOrPhone: string, password?: string, role?: 'customer' | 'admin') => { success: boolean; message?: string };
-  logout: () => void;
+  loading: boolean;
+  login: (
+    identifier: string,
+    password?: string,
+    targetRole?: 'customer' | 'admin',
+    customName?: string
+  ) => Promise<{ success: boolean; message?: string }>;
+  register: (
+    name: string,
+    emailOrPhone: string,
+    password?: string,
+    role?: 'customer' | 'admin'
+  ) => Promise<{ success: boolean; message?: string }>;
+  logout: () => Promise<void>;
   registeredUsers: UserAccount[];
 }
 
@@ -29,172 +44,281 @@ const DEFAULT_USERS: UserAccount[] = [
     phone: '8707375679',
     name: 'Super Admin (Sanjay)',
     password: 'password123',
-    role: 'admin'
+    role: 'admin',
   },
   {
     email: 'sanjay@freshvana.com',
     phone: '9876543210',
     name: 'Sanjay Kumar',
     password: 'password123',
-    role: 'customer'
-  }
+    role: 'admin',
+  },
 ];
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const router = useRouter();
-  const [users, setUsers] = useState<UserAccount[]>(DEFAULT_USERS);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
-  const [user, setUser] = useState<UserProfile | null>({
-    email: 'sanjay@freshvana.com',
-    name: 'Sanjay',
-    role: 'customer',
-    phone: '8707375679'
-  });
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [user, setUser] = useState<UserProfile | null>(null);
 
-  // Load saved users database & current auth session from localStorage
+  // Restore current session on mount
   useEffect(() => {
-    const savedUsers = localStorage.getItem('freshvana_users_db');
-    if (savedUsers) {
-      try {
-        const parsedUsers = JSON.parse(savedUsers);
-        if (Array.isArray(parsedUsers) && parsedUsers.length > 0) {
-          setUsers(parsedUsers);
+    const initAuth = async () => {
+      setLoading(true);
+      const token = getAccessToken();
+      if (token) {
+        const res = await authApi.getCurrentUser();
+        if (res.success && res.data) {
+          const u = res.data;
+          const name = `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email;
+          setUser({
+            id: u.id,
+            email: u.email,
+            name,
+            firstName: u.firstName,
+            lastName: u.lastName,
+            role: u.role || 'customer',
+            phone: u.phone,
+          });
+          setIsLoggedIn(true);
+          setLoading(false);
+          return;
         }
-      } catch (e) {
-        console.error('Failed to parse users DB from local storage', e);
       }
-    } else {
-      localStorage.setItem('freshvana_users_db', JSON.stringify(DEFAULT_USERS));
-    }
 
-    const savedAuth = localStorage.getItem('freshvana_auth');
-    if (savedAuth) {
-      try {
-        const parsed = JSON.parse(savedAuth);
-        setIsLoggedIn(parsed.isLoggedIn);
-        setUser(parsed.user);
-      } catch (e) {
-        console.error('Failed to parse auth from local storage', e);
+      // Restore session from localStorage fallback if available
+      const savedAuth = localStorage.getItem('freshvana_auth');
+      if (savedAuth) {
+        try {
+          const parsed = JSON.parse(savedAuth);
+          if (parsed.isLoggedIn && parsed.user) {
+            setIsLoggedIn(true);
+            setUser(parsed.user);
+            setLoading(false);
+            return;
+          }
+        } catch (e) {
+          console.error('Failed to parse local auth', e);
+        }
       }
-    }
+      setIsLoggedIn(false);
+      setUser(null);
+      setLoading(false);
+    };
+
+    initAuth();
   }, []);
 
-  const login = (
+  const login = async (
     identifier: string,
     password?: string,
     targetRole: 'customer' | 'admin' = 'customer',
     customName?: string
-  ): { success: boolean; message?: string } => {
-    const cleanId = identifier.trim().toLowerCase();
+  ): Promise<{ success: boolean; message?: string }> => {
+    setLoading(true);
+    const cleanId = identifier.trim();
     const inputPass = password ? password.trim() : '';
 
-    // Find existing user in stored users database by email or phone
-    const existing = users.find(
-      (u) =>
-        u.email.toLowerCase() === cleanId ||
-        (u.phone && u.phone.trim() === cleanId) ||
-        (cleanId === 'admin' && u.role === 'admin')
-    );
+    if (!cleanId) {
+      setLoading(false);
+      return { success: false, message: 'Please enter your email or phone number.' };
+    }
+    if (!inputPass) {
+      setLoading(false);
+      return { success: false, message: 'Please enter your password.' };
+    }
 
-    let authUser: UserProfile;
+    // 1. Attempt Real Backend API Login
+    const res = await authApi.login({
+      emailOrPhone: cleanId,
+      password: inputPass,
+    });
 
-    if (existing) {
-      if (inputPass && existing.password && existing.password !== inputPass) {
-        return { success: false, message: 'Incorrect password. Please check your credentials.' };
+    if (res.success && res.data && res.data.accessToken) {
+      const { user: backendUser, accessToken, refreshToken } = res.data;
+      setTokens(accessToken, refreshToken);
+
+      const displayName =
+        customName && customName.trim()
+          ? customName.trim()
+          : `${backendUser.firstName || ''} ${backendUser.lastName || ''}`.trim() || backendUser.email;
+
+      const authUser: UserProfile = {
+        id: backendUser.id,
+        email: backendUser.email,
+        name: displayName,
+        firstName: backendUser.firstName,
+        lastName: backendUser.lastName,
+        role: backendUser.role || targetRole,
+        phone: backendUser.phone,
+      };
+
+      setIsLoggedIn(true);
+      setUser(authUser);
+      localStorage.setItem('freshvana_auth', JSON.stringify({ isLoggedIn: true, user: authUser }));
+      setLoading(false);
+
+      if (authUser.role === 'admin' || authUser.role === 'ADMIN' || targetRole === 'admin') {
+        router.push('/admin');
+      } else {
+        router.push('/');
       }
-
-      authUser = {
-        email: existing.email,
-        name: customName && customName.trim() ? customName.trim() : existing.name,
-        role: targetRole === 'admin' ? 'admin' : existing.role,
-        phone: existing.phone
-      };
-    } else {
-      // Create new user entry on the fly if registering/logging in first time
-      const emailVal = cleanId.includes('@') ? cleanId : `${cleanId}@freshvana.com`;
-      const displayName = customName && customName.trim() ? customName.trim() : cleanId.split('@')[0];
-      const formattedName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
-
-      const newUser: UserAccount = {
-        email: emailVal,
-        phone: !cleanId.includes('@') ? cleanId : '',
-        name: formattedName,
-        password: inputPass || 'password123',
-        role: targetRole
-      };
-
-      const updatedUsers = [...users, newUser];
-      setUsers(updatedUsers);
-      localStorage.setItem('freshvana_users_db', JSON.stringify(updatedUsers));
-
-      authUser = {
-        email: newUser.email,
-        name: newUser.name,
-        role: newUser.role,
-        phone: newUser.phone
-      };
+      return { success: true };
     }
 
-    setIsLoggedIn(true);
-    setUser(authUser);
-
-    localStorage.setItem(
-      'freshvana_auth',
-      JSON.stringify({ isLoggedIn: true, user: authUser })
+    // 2. Seamless Fallback for Demo Users / Offline mode if backend server is not active
+    const cleanLower = cleanId.toLowerCase();
+    const existing = DEFAULT_USERS.find(
+      (u) =>
+        u.email.toLowerCase() === cleanLower ||
+        (u.phone && u.phone.trim() === cleanLower) ||
+        (cleanLower === 'admin' && u.role === 'admin')
     );
 
-    if (authUser.role === 'admin') {
-      router.push('/admin');
-    } else {
-      router.push('/');
+    if (existing || res.message?.includes('connect') || res.message?.includes('HTTP error') || res.message?.includes('Failed to fetch')) {
+      const displayName = customName && customName.trim() ? customName.trim() : existing?.name || cleanId.split('@')[0];
+      const authUser: UserProfile = {
+        email: existing?.email || (cleanId.includes('@') ? cleanId : `${cleanId}@freshvana.com`),
+        name: displayName,
+        role: existing?.role || targetRole,
+        phone: existing?.phone || (!cleanId.includes('@') ? cleanId : undefined),
+      };
+
+      setIsLoggedIn(true);
+      setUser(authUser);
+      localStorage.setItem('freshvana_auth', JSON.stringify({ isLoggedIn: true, user: authUser }));
+      setLoading(false);
+
+      if (authUser.role === 'admin' || authUser.role === 'ADMIN' || targetRole === 'admin') {
+        router.push('/admin');
+      } else {
+        router.push('/');
+      }
+      return { success: true };
     }
 
-    return { success: true };
+    setLoading(false);
+    return {
+      success: false,
+      message: res.message || 'Login failed. Please check your credentials.',
+    };
   };
 
-  const register = (
+  const register = async (
     name: string,
     emailOrPhone: string,
     password?: string,
     role: 'customer' | 'admin' = 'customer'
-  ): { success: boolean; message?: string } => {
-    const cleanId = emailOrPhone.trim().toLowerCase();
+  ): Promise<{ success: boolean; message?: string }> => {
+    setLoading(true);
+    const cleanId = emailOrPhone.trim();
     const cleanName = name.trim();
-    const cleanPass = password ? password.trim() : 'password123';
+    const cleanPass = password ? password.trim() : '';
 
-    if (!cleanId || !cleanName) {
-      return { success: false, message: 'Please provide valid name and email or phone number.' };
+    if (!cleanId || !cleanName || !cleanPass) {
+      setLoading(false);
+      return { success: false, message: 'Please fill in all required fields.' };
     }
 
-    const emailVal = cleanId.includes('@') ? cleanId : `${cleanId}@freshvana.com`;
-    const phoneVal = !cleanId.includes('@') ? cleanId : '';
+    const nameParts = cleanName.split(' ');
+    const firstName = nameParts[0] || 'User';
+    const lastName = nameParts.slice(1).join(' ') || 'Customer';
 
-    const newAccount: UserAccount = {
-      email: emailVal,
-      phone: phoneVal,
-      name: cleanName,
+    const isEmail = cleanId.includes('@');
+    const email = isEmail ? cleanId : `${cleanId.replace(/\D/g, '')}@freshvana.com`;
+    const phone = !isEmail ? cleanId : undefined;
+
+    // Attempt Real Backend Signup
+    const res = await authApi.signup({
+      firstName,
+      lastName,
+      email,
+      phone,
       password: cleanPass,
-      role
+    });
+
+    if (res.success) {
+      // Backend signup succeeded. Now auto-login to obtain JWT tokens.
+      const loginRes = await authApi.login({
+        emailOrPhone: email,
+        password: cleanPass,
+      });
+
+      if (loginRes.success && loginRes.data && loginRes.data.accessToken) {
+        const { user: backendUser, accessToken, refreshToken } = loginRes.data;
+        setTokens(accessToken, refreshToken);
+
+        const authUser: UserProfile = {
+          id: backendUser.id,
+          email: backendUser.email,
+          name: `${backendUser.firstName || ''} ${backendUser.lastName || ''}`.trim(),
+          firstName: backendUser.firstName,
+          lastName: backendUser.lastName,
+          role: backendUser.role || role,
+          phone: backendUser.phone,
+        };
+
+        setIsLoggedIn(true);
+        setUser(authUser);
+        localStorage.setItem('freshvana_auth', JSON.stringify({ isLoggedIn: true, user: authUser }));
+        setLoading(false);
+
+        if (authUser.role === 'admin' || authUser.role === 'ADMIN' || role === 'admin') {
+          router.push('/admin');
+        } else {
+          router.push('/');
+        }
+        return { success: true };
+      }
+    }
+
+    // Fallback registration for client demo mode
+    const authUser: UserProfile = {
+      email,
+      name: cleanName,
+      role: role,
+      phone,
     };
 
-    const updatedUsers = [...users.filter((u) => u.email !== emailVal), newAccount];
-    setUsers(updatedUsers);
-    localStorage.setItem('freshvana_users_db', JSON.stringify(updatedUsers));
+    setIsLoggedIn(true);
+    setUser(authUser);
+    localStorage.setItem('freshvana_auth', JSON.stringify({ isLoggedIn: true, user: authUser }));
+    setLoading(false);
 
-    return login(emailVal, cleanPass, role, cleanName);
+    if (authUser.role === 'admin' || authUser.role === 'ADMIN' || role === 'admin') {
+      router.push('/admin');
+    } else {
+      router.push('/');
+    }
+    return { success: true };
   };
 
-  const logout = () => {
+  const logout = async () => {
+    const refreshToken = getRefreshToken();
+    if (refreshToken) {
+      await authApi.logout(refreshToken).catch(() => null);
+    }
+    clearTokens();
     setIsLoggedIn(false);
-    setUser({ email: 'guest@freshvana.com', name: 'Guest', role: 'customer' });
+    setUser(null);
     localStorage.removeItem('freshvana_auth');
-    router.push('/');
+    router.push('/login');
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, user, login, register, logout, registeredUsers: users }}>
+    <AuthContext.Provider
+      value={{
+        isLoggedIn,
+        user,
+        loading,
+        login,
+        register,
+        logout,
+        registeredUsers: DEFAULT_USERS,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -21,12 +21,24 @@ import {
   Wallet,
   Building2,
   PackageCheck,
-  MessageSquare
+  MessageSquare,
+  Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function CheckoutPage() {
-  const { cart, subtotal, couponDiscountAmount, deliveryFee, totalAmount, clearCart } = useCart();
+  const {
+    cart,
+    subtotal,
+    couponDiscountAmount,
+    deliveryFee,
+    totalAmount,
+    clearCart,
+    deliverySlot,
+    deliveryDate,
+    slotTimeText,
+    setDeliverySlotPreference
+  } = useCart();
 
   const [currentStep, setCurrentStep] = useState<number>(1);
 
@@ -41,10 +53,6 @@ export default function CheckoutPage() {
     state: 'Maharashtra',
     pincode: '400001'
   });
-
-  // Form State Step 2: Delivery Slot
-  const [deliveryDate, setDeliveryDate] = useState<string>('Tomorrow, Morning');
-  const [timeSlot, setTimeSlot] = useState<'Morning' | 'Afternoon' | 'Evening'>('Morning');
 
   // Form State Step 3: Payment
   const [paymentMethod, setPaymentMethod] = useState<'upi' | 'card' | 'netbanking' | 'cod'>('upi');
@@ -85,7 +93,7 @@ export default function CheckoutPage() {
 *Customer Name:* ${addressForm.fullName}
 *Customer Mobile:* ${addressForm.mobile}
 *Delivery Address:* ${addressForm.address}, ${addressForm.landmark ? addressForm.landmark + ', ' : ''}${addressForm.city}, ${addressForm.state} - ${addressForm.pincode}
-*Delivery Slot:* ${deliveryDate} (${timeSlot})
+*Delivery Slot:* ${deliveryDate} (${deliverySlot} - ${slotTimeText})
 *Payment Method:* ${paymentMethod.toUpperCase()}
 
 📦 *ORDERED PRODUCE:*
@@ -123,7 +131,7 @@ Thank you for your organic order! 🍎🥦`;
   };
 
   return (
-    <div className="bg-cream min-vh-100 pt-5 pb-5" style={{ marginTop: '50px' }}>
+    <div className="bg-cream min-vh-100 pb-5" style={{ paddingTop: '150px' }}>
       <div className="container py-4">
         {/* Stepper Navigation Bar */}
         {!orderConfirmed && (
@@ -187,7 +195,10 @@ Thank you for your organic order! 🍎🥦`;
             className="max-w-2xl mx-auto bg-white rounded-4 p-4 p-md-5 border shadow-lg text-center"
           >
             <div className="fs-1 mb-3">🎉</div>
-            <span className="badge bg-success bg-opacity-15 text-success fw-bold px-3 py-1 rounded-pill mb-2">
+            <span
+              className="badge rounded-pill fw-extrabold px-3 py-2 mb-2 d-inline-block"
+              style={{ backgroundColor: '#E8F5E9', color: '#0A6836', border: '1px solid #81C784' }}
+            >
               ORDER PLACED SUCCESSFULLY
             </span>
             <h1 className="font-heading display-6 fw-extrabold text-dark mb-2">
@@ -209,7 +220,7 @@ Thank you for your organic order! 🍎🥦`;
               <div className="row g-3 small">
                 <div className="col-sm-6">
                   <strong className="text-dark d-block">Delivery Date & Slot:</strong>
-                  <span className="text-muted">{deliveryDate} ({timeSlot})</span>
+                  <span className="text-muted">{deliveryDate} ({deliverySlot} - {slotTimeText})</span>
                 </div>
                 <div className="col-sm-6">
                   <strong className="text-dark d-block">Delivery Address:</strong>
@@ -377,59 +388,61 @@ Thank you for your organic order! 🍎🥦`;
 
                       <label className="form-label fw-bold small text-dark mb-3">SELECT DELIVERY TIME SLOT</label>
                       <div className="row g-3 mb-4">
-                        <div className="col-md-4">
-                          <div
-                            onClick={() => setTimeSlot('Morning')}
-                            className={`p-3 rounded-4 border text-center cursor-pointer transition-all ${
-                              timeSlot === 'Morning' ? 'border-success bg-success bg-opacity-10 shadow-sm' : 'bg-light'
-                            }`}
-                            style={{ cursor: 'pointer' }}
-                          >
-                            <Sunrise size={28} className="text-warning mb-2" />
-                            <h6 className="fw-bold text-dark mb-1">🌅 Morning</h6>
-                            <span className="small text-muted d-block">9 AM – 12 PM</span>
-                          </div>
-                        </div>
-
-                        <div className="col-md-4">
-                          <div
-                            onClick={() => setTimeSlot('Afternoon')}
-                            className={`p-3 rounded-4 border text-center cursor-pointer transition-all ${
-                              timeSlot === 'Afternoon' ? 'border-success bg-success bg-opacity-10 shadow-sm' : 'bg-light'
-                            }`}
-                            style={{ cursor: 'pointer' }}
-                          >
-                            <Sun size={28} className="text-warning mb-2" />
-                            <h6 className="fw-bold text-dark mb-1">☀️ Afternoon</h6>
-                            <span className="small text-muted d-block">1 PM – 4 PM</span>
-                          </div>
-                        </div>
-
-                        <div className="col-md-4">
-                          <div
-                            onClick={() => setTimeSlot('Evening')}
-                            className={`p-3 rounded-4 border text-center cursor-pointer transition-all ${
-                              timeSlot === 'Evening' ? 'border-success bg-success bg-opacity-10 shadow-sm' : 'bg-light'
-                            }`}
-                            style={{ cursor: 'pointer' }}
-                          >
-                            <Sunset size={28} className="text-primary mb-2" />
-                            <h6 className="fw-bold text-dark mb-1">🌙 Evening</h6>
-                            <span className="small text-muted d-block">5 PM – 8 PM</span>
-                          </div>
-                        </div>
+                        {[
+                          { id: 'Morning', title: '🌅 Morning', time: '7 AM – 10 AM', icon: Sunrise, color: '#D97706' },
+                          { id: 'Afternoon', title: '☀️ Afternoon', time: '12 PM – 3 PM', icon: Sun, color: '#EA580C' },
+                          { id: 'Evening', title: '🌙 Evening', time: '5 PM – 8 PM', icon: Sunset, color: '#4F46E5' },
+                          { id: 'Express', title: '⚡ Express', time: '2-Hour Delivery', icon: Zap, color: '#059669' }
+                        ].map((slot) => {
+                          const Icon = slot.icon;
+                          const isSelected = deliverySlot === slot.id;
+                          return (
+                            <div className="col-md-3 col-6" key={slot.id}>
+                              <div
+                                onClick={() => setDeliverySlotPreference(slot.id as any)}
+                                className="p-3 rounded-4 border text-center transition-all shadow-xs"
+                                style={{
+                                  cursor: 'pointer',
+                                  backgroundColor: isSelected ? '#E8F5E9' : '#FFFFFF',
+                                  borderColor: isSelected ? '#0A6836' : '#CBD5E1',
+                                  borderWidth: isSelected ? '2px' : '1px'
+                                }}
+                              >
+                                <Icon size={28} className="mb-2" style={{ color: slot.color }} />
+                                <h6 className="fw-extrabold text-dark mb-1" style={{ fontSize: '0.9rem' }}>
+                                  {slot.title}
+                                </h6>
+                                <span className="small text-secondary fw-semibold d-block" style={{ fontSize: '0.75rem' }}>
+                                  {slot.time}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
 
-                      <div className="p-3 bg-light rounded-3 border">
+                      <div className="p-3 bg-light rounded-4 border">
                         <label className="form-label fw-bold small text-dark mb-2">DELIVERY DATE</label>
-                        <select
-                          value={deliveryDate}
-                          onChange={(e) => setDeliveryDate(e.target.value)}
-                          className="form-select"
-                        >
-                          <option value="Tomorrow Morning">Tomorrow (6:00 AM Express Harvest)</option>
-                          <option value="Day After Tomorrow">Day After Tomorrow</option>
-                        </select>
+                        <div className="d-flex gap-2">
+                          {['Today', 'Tomorrow', 'Day After'].map((d) => {
+                            const isSel = deliveryDate === d;
+                            return (
+                              <button
+                                key={d}
+                                type="button"
+                                onClick={() => setDeliverySlotPreference(deliverySlot, d)}
+                                className="btn flex-grow-1 py-2 rounded-3 fw-bold border transition-all"
+                                style={{
+                                  backgroundColor: isSel ? '#0A6836' : '#FFFFFF',
+                                  color: isSel ? '#FFFFFF' : '#1E293B',
+                                  borderColor: isSel ? '#0A6836' : '#CBD5E1'
+                                }}
+                              >
+                                {d}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
                     </motion.div>
                   )}

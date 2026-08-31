@@ -83,11 +83,6 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }}
     >
       {children}
-      {toastMessage && (
-        <div className="toast-freshvana animate-fade-in">
-          <span>{toastMessage}</span>
-        </div>
-      )}
     </WishlistContext.Provider>
   );
 };

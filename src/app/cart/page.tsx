@@ -3,8 +3,22 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useCart } from '@/context/CartContext';
-import { ShoppingBag, Trash2, Plus, Minus, ArrowRight, Tag, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { useCart, SlotType } from '@/context/CartContext';
+import {
+  ShoppingBag,
+  Trash2,
+  Plus,
+  Minus,
+  ArrowRight,
+  Tag,
+  CheckCircle2,
+  ArrowLeft,
+  Clock,
+  Sunrise,
+  Sun,
+  Sunset,
+  Zap
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function CartPage() {
@@ -20,7 +34,11 @@ export default function CartPage() {
     deliveryFee,
     totalAmount,
     applyCoupon,
-    removeCoupon
+    removeCoupon,
+    deliverySlot,
+    deliveryDate,
+    slotTimeText,
+    setDeliverySlotPreference
   } = useCart();
 
   const [couponInput, setCouponInput] = useState('');
@@ -38,7 +56,7 @@ export default function CartPage() {
   };
 
   return (
-    <div className="bg-cream min-vh-100 pt-5 pb-5" style={{ marginTop: '50px' }}>
+    <div className="bg-cream min-vh-100 pb-5" style={{ paddingTop: '150px' }}>
       <div className="container py-4">
         {/* Header */}
         <div className="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
@@ -162,9 +180,76 @@ export default function CartPage() {
             {/* Right Summary Card */}
             <div className="col-lg-4">
               <div className="bg-white rounded-4 border shadow-sm p-4 sticky-top" style={{ top: '100px' }}>
-                <h4 className="font-heading fw-bold text-dark mb-4 pb-2 border-bottom">
-                  Order Summary
-                </h4>
+                {/* Delivery Time Slot Preference Selector */}
+                <div className="mb-4 p-3 bg-light rounded-4 border">
+                  <div className="d-flex align-items-center justify-content-between mb-2">
+                    <label className="form-label fw-bold text-dark small mb-0 d-flex align-items-center gap-1">
+                      <Clock size={16} className="text-success" />
+                      <span>DELIVERY TIME SLOT</span>
+                    </label>
+                    <span
+                      className="badge rounded-pill fw-bold font-heading"
+                      style={{
+                        backgroundColor: '#E8F5E9',
+                        color: '#0A6836',
+                        border: '1px solid #81C784',
+                        padding: '4px 10px'
+                      }}
+                    >
+                      {deliveryDate} ({deliverySlot})
+                    </span>
+                  </div>
+
+                  {/* Day Pills */}
+                  <div className="d-flex gap-1 mb-2">
+                    {['Today', 'Tomorrow', 'Day After'].map((d) => (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => setDeliverySlotPreference(deliverySlot, d)}
+                        className={`btn btn-xs rounded-pill flex-grow-1 py-1 fw-bold ${
+                          deliveryDate === d ? 'btn-success text-white' : 'btn-white border text-dark'
+                        }`}
+                        style={{ fontSize: '0.72rem' }}
+                      >
+                        {d}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Slot Pills */}
+                  <div className="row g-1">
+                    {[
+                      { id: 'Morning', name: 'Morning', time: '7-10 AM', icon: Sunrise },
+                      { id: 'Afternoon', name: 'Afternoon', time: '12-3 PM', icon: Sun },
+                      { id: 'Evening', name: 'Evening', time: '5-8 PM', icon: Sunset },
+                      { id: 'Express', name: 'Express', time: '⚡ 2-Hour', icon: Zap }
+                    ].map((option) => {
+                      const Icon = option.icon;
+                      const isSelected = deliverySlot === option.id;
+                      return (
+                        <div className="col-6" key={option.id}>
+                          <button
+                            type="button"
+                            onClick={() => setDeliverySlotPreference(option.id as SlotType, deliveryDate)}
+                            className={`btn w-100 text-start p-2 rounded-3 border fw-semibold transition-all ${
+                              isSelected ? 'btn-success text-white' : 'btn-white text-dark'
+                            }`}
+                            style={{ fontSize: '0.72rem' }}
+                          >
+                            <div className="d-flex align-items-center justify-content-between">
+                              <span className="d-flex align-items-center gap-1">
+                                <Icon size={12} />
+                                {option.name}
+                              </span>
+                              <small style={{ opacity: 0.85, fontSize: '0.65rem' }}>{option.time}</small>
+                            </div>
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
 
                 {/* Coupon Code Section */}
                 <div className="mb-4">

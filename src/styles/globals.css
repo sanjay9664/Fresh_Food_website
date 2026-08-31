@@ -334,3 +334,100 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   z-index: 1080;
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
+/* Super Admin desktop workspace navigation */
+.admin-sidebar {
+  position: fixed;
+  top: 88px;
+  left: 0;
+  bottom: 0;
+  width: 220px;
+  z-index: 100;
+}
+
+.admin-sidebar .btn {
+  transition: transform 160ms ease, background-color 160ms ease;
+}
+
+.admin-sidebar .btn:hover {
+  transform: translateX(3px);
+}
+
+.admin-inventory-table {
+  border-collapse: separate;
+  border-spacing: 0 9px;
+}
+
+.admin-inventory-table thead th {
+  border: 0;
+  color: #63706a;
+  font-size: 0.74rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.admin-inventory-table tbody tr {
+  box-shadow: 0 1px 0 #e8eeea, 0 5px 16px rgba(23, 56, 38, 0.035);
+}
+
+.admin-inventory-table tbody td {
+  background: #fff;
+  border-top: 1px solid #edf1ee;
+  border-bottom: 1px solid #edf1ee;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.admin-inventory-table tbody td:first-child {
+  border-left: 1px solid #edf1ee;
+  border-radius: 14px 0 0 14px;
+}
+
+.admin-inventory-table tbody td:last-child {
+  border-right: 1px solid #edf1ee;
+  border-radius: 0 14px 14px 0;
+}
+
+.admin-inventory-table .admin-action-heading,
+.admin-inventory-table .admin-action-cell {
+  min-width: 108px;
+  width: 108px;
+  white-space: nowrap;
+}
+
+.admin-action-cell .btn {
+  flex: 0 0 auto;
+}
+
+.admin-inventory-table tbody tr:hover td,
+.admin-order-card:hover {
+  background: #f4fbf6;
+}
+
+.admin-product-card {
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(23, 56, 38, 0.045);
+}
+
+.admin-product-card .min-w-0 {
+  min-width: 0;
+}
+
+.admin-order-card {
+  transition: box-shadow 160ms ease, transform 160ms ease;
+}
+
+.admin-order-card:hover {
+  box-shadow: 0 10px 22px rgba(7, 84, 43, 0.08);
+  transform: translateY(-2px);
+}
+
+@media (min-width: 1200px) {
+  .admin-main-container {
+    margin-left: 220px;
+    width: calc(100% - 220px);
+    max-width: none;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}

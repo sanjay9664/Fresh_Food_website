@@ -3,8 +3,26 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useCart } from '@/context/CartContext';
-import { X, ShoppingBag, Trash2, Plus, Minus, ArrowRight, Tag, CheckCircle2 } from 'lucide-react';
+import { useCart, SlotType } from '@/context/CartContext';
+import {
+  X,
+  ShoppingBag,
+  Trash2,
+  Plus,
+  Minus,
+  ArrowRight,
+  Tag,
+  CheckCircle2,
+  Clock,
+  Calendar,
+  Zap,
+  ChevronDown,
+  ChevronUp,
+  Truck,
+  Sunrise,
+  Sun,
+  Sunset
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const CartDrawer: React.FC = () => {
@@ -21,11 +39,16 @@ export const CartDrawer: React.FC = () => {
     deliveryFee,
     totalAmount,
     applyCoupon,
-    removeCoupon
+    removeCoupon,
+    deliverySlot,
+    deliveryDate,
+    slotTimeText,
+    setDeliverySlotPreference
   } = useCart();
 
   const [couponInput, setCouponInput] = useState('');
   const [couponError, setCouponError] = useState('');
+  const [showSlotPicker, setShowSlotPicker] = useState(false);
 
   const handleApplyCoupon = (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +60,15 @@ export const CartDrawer: React.FC = () => {
       setCouponInput('');
     }
   };
+
+  const slotOptions: { id: SlotType; name: string; time: string; icon: React.ElementType; color: string }[] = [
+    { id: 'Morning', name: 'Morning', time: '7 AM - 10 AM', icon: Sunrise, color: '#D97706' },
+    { id: 'Afternoon', name: 'Afternoon', time: '12 PM - 3 PM', icon: Sun, color: '#EA580C' },
+    { id: 'Evening', name: 'Evening', time: '5 PM - 8 PM', icon: Sunset, color: '#4F46E5' },
+    { id: 'Express', name: 'Express', time: '⚡ 2-Hour Doorstep', icon: Zap, color: '#059669' }
+  ];
+
+  const dateOptions = ['Today', 'Tomorrow', 'Day After'];
 
   return (
     <AnimatePresence>
@@ -92,6 +124,139 @@ export const CartDrawer: React.FC = () => {
                 </span>
               )}
             </div>
+
+            {/* Delivery Time Slot Preference Selector Card (Mobile View Highlight) */}
+            {cart.length > 0 && (
+              <div className="p-2 border-bottom" style={{ background: '#F8FAF8' }}>
+                <div className="bg-white rounded-3 border p-2 shadow-xs">
+                  <div
+                    onClick={() => setShowSlotPicker(!showSlotPicker)}
+                    className="d-flex align-items-center justify-content-between cursor-pointer"
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <div className="d-flex align-items-center gap-2">
+                      <div
+                        className="rounded-circle d-flex align-items-center justify-content-center"
+                        style={{ width: '30px', height: '30px', backgroundColor: '#E8F5E9', color: '#0A6836' }}
+                      >
+                        <Clock size={16} />
+                      </div>
+                      <div>
+                        <div className="d-flex align-items-center gap-1 flex-wrap">
+                          <span className="fw-extrabold text-dark" style={{ fontSize: '0.78rem' }}>
+                            Delivery Time Slot:
+                          </span>
+                          <span
+                            className="badge rounded-pill fw-bold"
+                            style={{
+                              fontSize: '0.75rem',
+                              backgroundColor: '#E8F5E9',
+                              color: '#0A6836',
+                              border: '1px solid #81C784',
+                              padding: '4px 10px'
+                            }}
+                          >
+                            {deliveryDate} ({deliverySlot})
+                          </span>
+                        </div>
+                        <span className="text-dark fw-semibold d-block" style={{ fontSize: '0.72rem' }}>
+                          ⏰ {slotTimeText}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-link p-0 fw-bold d-flex align-items-center gap-1 text-decoration-none"
+                      style={{ fontSize: '0.75rem', color: '#0A6836' }}
+                    >
+                      <span>{showSlotPicker ? 'Close' : 'Change'}</span>
+                      {showSlotPicker ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                    </button>
+                  </div>
+
+                  {/* Expandable Slot Picker UI */}
+                  <AnimatePresence>
+                    {showSlotPicker && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="pt-2 border-top mt-2"
+                      >
+                        {/* Date Option Pills */}
+                        <div className="mb-2">
+                          <label className="text-dark fw-bold mb-1 d-block" style={{ fontSize: '0.68rem', letterSpacing: '0.5px' }}>
+                            SELECT DELIVERY DAY:
+                          </label>
+                          <div className="d-flex gap-1">
+                            {dateOptions.map((d) => {
+                              const isSel = deliveryDate === d;
+                              return (
+                                <button
+                                  key={d}
+                                  type="button"
+                                  onClick={() => setDeliverySlotPreference(deliverySlot, d)}
+                                  className="btn btn-xs rounded-pill flex-grow-1 py-1 fw-bold border transition-all"
+                                  style={{
+                                    fontSize: '0.72rem',
+                                    backgroundColor: isSel ? '#0A6836' : '#FFFFFF',
+                                    color: isSel ? '#FFFFFF' : '#1E293B',
+                                    borderColor: isSel ? '#0A6836' : '#CBD5E1'
+                                  }}
+                                >
+                                  {d}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Slot Options Grid */}
+                        <label className="text-dark fw-bold mb-1 d-block" style={{ fontSize: '0.68rem', letterSpacing: '0.5px' }}>
+                          SELECT TIME SLOT:
+                        </label>
+                        <div className="row g-1">
+                          {slotOptions.map((option) => {
+                            const Icon = option.icon;
+                            const isSelected = deliverySlot === option.id;
+                            return (
+                              <div className="col-6" key={option.id}>
+                                <div
+                                  onClick={() => {
+                                    setDeliverySlotPreference(option.id, deliveryDate);
+                                    setShowSlotPicker(false);
+                                  }}
+                                  className="p-2 rounded-3 border transition-all text-start cursor-pointer"
+                                  style={{
+                                    cursor: 'pointer',
+                                    backgroundColor: isSelected ? '#E8F5E9' : '#FFFFFF',
+                                    borderColor: isSelected ? '#0A6836' : '#E2E8F0'
+                                  }}
+                                >
+                                  <div className="d-flex align-items-center justify-content-between mb-1">
+                                    <div className="d-flex align-items-center gap-1">
+                                      <Icon size={14} style={{ color: option.color }} />
+                                      <span className="fw-bold text-dark" style={{ fontSize: '0.74rem' }}>
+                                        {option.name}
+                                      </span>
+                                    </div>
+                                    {isSelected && <CheckCircle2 size={12} style={{ color: '#0A6836' }} />}
+                                  </div>
+                                  <span className="text-secondary d-block fw-medium" style={{ fontSize: '0.66rem' }}>
+                                    {option.time}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+            )}
 
             {/* Cart Items List */}
             <div className="p-3 overflow-auto flex-grow-1">

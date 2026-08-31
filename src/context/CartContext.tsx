@@ -3,6 +3,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { CartItem, Product } from '@/types';
 
+export type SlotType = 'Morning' | 'Afternoon' | 'Evening' | 'Express';
+
 interface CartContextType {
   cart: CartItem[];
   addToCart: (product: Product, weight?: string, quantity?: number) => void;
@@ -25,6 +27,12 @@ interface CartContextType {
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
   toastMessage: string | null;
+
+  // Delivery slot state
+  deliverySlot: SlotType;
+  deliveryDate: string;
+  slotTimeText: string;
+  setDeliverySlotPreference: (slot: SlotType, date?: string) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -36,9 +44,30 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [hasLoadedCart, setHasLoadedCart] = useState(false);
 
+  // Delivery Slot Selection State
+  const [deliverySlot, setDeliverySlot] = useState<SlotType>('Morning');
+  const [deliveryDate, setDeliveryDate] = useState<string>('Tomorrow');
+
+  const getSlotTimeText = (slot: SlotType) => {
+    switch (slot) {
+      case 'Morning':
+        return '7 AM – 10 AM';
+      case 'Afternoon':
+        return '12 PM – 3 PM';
+      case 'Evening':
+        return '5 PM – 8 PM';
+      case 'Express':
+        return '⚡ 2-Hour Express';
+      default:
+        return '7 AM – 10 AM';
+    }
+  };
+
   useEffect(() => {
     const saved = localStorage.getItem('freshvana_cart');
     const savedCoupon = localStorage.getItem('freshvana_coupon');
+    const savedSlot = localStorage.getItem('freshvana_delivery_slot') as SlotType;
+    const savedDate = localStorage.getItem('freshvana_delivery_date');
     if (saved) {
       try {
         setCart(JSON.parse(saved));
@@ -47,13 +76,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
     if (savedCoupon) setCouponCode(savedCoupon);
+    if (savedSlot) setDeliverySlot(savedSlot);
+    if (savedDate) setDeliveryDate(savedDate);
     setHasLoadedCart(true);
   }, []);
 
   useEffect(() => {
-    // Do not overwrite a saved basket with the initial empty state before the
-    // browser has finished loading it. This is especially important on Home,
-    // where a customer may add items immediately after the page opens.
     if (hasLoadedCart) {
       localStorage.setItem('freshvana_cart', JSON.stringify(cart));
     }
@@ -67,9 +95,23 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [couponCode]);
 
+  useEffect(() => {
+    if (hasLoadedCart) {
+      localStorage.setItem('freshvana_delivery_slot', deliverySlot);
+      localStorage.setItem('freshvana_delivery_date', deliveryDate);
+    }
+  }, [deliverySlot, deliveryDate, hasLoadedCart]);
+
+  const setDeliverySlotPreference = (slot: SlotType, date?: string) => {
+    setDeliverySlot(slot);
+    if (date) setDeliveryDate(date);
+    const dateLabel = date || deliveryDate;
+    showToast(`📦 Delivery updated to ${dateLabel} (${slot} ${getSlotTimeText(slot)})`);
+  };
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
+    setTimeout(() => setToastMessage(null), 3500);
   };
 
   const getMultiplier = (w: string) => {
@@ -109,7 +151,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    showToast(`Added ${product.name} (${selectedWeight}) to your cart!`);
+    const timeLabel = getSlotTimeText(deliverySlot);
+    showToast(`🛒 Added ${product.name} (${selectedWeight})! Deliver by: ${deliveryDate} (${deliverySlot} ${timeLabel})`);
   };
 
   const removeFromCart = (productId: string, weight: string) => {
@@ -191,15 +234,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         totalAmount,
         isCartOpen,
         setIsCartOpen,
-        toastMessage
+        toastMessage,
+        deliverySlot,
+        deliveryDate,
+        slotTimeText: getSlotTimeText(deliverySlot),
+        setDeliverySlotPreference
       }}
     >
       {children}
-      {toastMessage && (
-        <div className="toast-freshvana animate-fade-in">
-          <span>{toastMessage}</span>
-        </div>
-      )}
     </CartContext.Provider>
   );
 };

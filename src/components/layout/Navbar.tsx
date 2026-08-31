@@ -326,8 +326,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
             </div>
 
             <div className="small text-muted d-flex align-items-center gap-2">
-              <Sparkles size={14} className="text-warning" />
-              <span>Use Code: <strong className="text-success">FRESH20</strong> for 20% OFF</span>
+              
+              
             </div>
           </div>
         </div>

@@ -99,7 +99,11 @@ export interface DeliveryAddress {
 }
 
 export interface DeliverySlot {
+  id?: string;
   date: string;
-  timeSlot: 'Morning' | 'Afternoon' | 'Evening';
+  timeSlot: 'Morning' | 'Afternoon' | 'Evening' | 'Express';
   slotTimeText: string;
+  label?: string;
+  isExpress?: boolean;
 }
+

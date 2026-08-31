@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useProducts } from '@/context/ProductContext';
@@ -38,7 +38,29 @@ export default function AdminDashboardPage() {
     resetToDefaults
   } = useProducts();
 
-  const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'orders'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'orders' | 'notifications' | 'system'>('products');
+  const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
+  const [notifications, setNotifications] = useState<Array<{ id: string; title: string; message: string; audience: string; sentAt: string }>>([]);
+  const [notificationDraft, setNotificationDraft] = useState({ title: '', message: '', audience: 'All customers' });
+  const [notificationSuccess, setNotificationSuccess] = useState(false);
+  const [orderFilter, setOrderFilter] = useState<'All' | 'Pending' | 'Out for Delivery' | 'Delivered'>('All');
+
+  // Frontend-only demo data. API data will replace this only when backend integration is requested.
+  const orders = [
+    { id: 'ORD-1048', name: 'Aarav Sharma', phone: '98765 41230', date: 'Today, 10:24 AM', slot: 'Evening · 5 PM - 8 PM', items: 'Alphonso Mango 1kg, Avocado 500g', count: 2, total: 548, status: 'Pending' },
+    { id: 'ORD-1047', name: 'Priya Verma', phone: '98110 23567', date: 'Today, 09:45 AM', slot: 'Morning · 7 AM - 10 AM', items: 'Carrot 1kg, Spinach 500g, Tomato 1kg', count: 3, total: 285, status: 'Out for Delivery' },
+    { id: 'ORD-1046', name: 'Rohan Mehta', phone: '98910 78234', date: 'Today, 08:15 AM', slot: 'Afternoon · 12 PM - 3 PM', items: 'Green Apple 1kg, Broccoli 500g', count: 2, total: 360, status: 'Delivered' },
+    { id: 'ORD-1045', name: 'Neha Singh', phone: '99871 44128', date: 'Yesterday, 06:38 PM', slot: 'Morning · 7 AM - 10 AM', items: 'Organic Banana 1kg, Capsicum 500g', count: 2, total: 230, status: 'Pending' },
+    { id: 'ORD-1044', name: 'Vikram Patel', phone: '97654 89102', date: 'Yesterday, 04:20 PM', slot: 'Evening · 5 PM - 8 PM', items: 'Fresh Tomato 1kg, Potato 2kg, Onion 1kg', count: 3, total: 315, status: 'Delivered' },
+    { id: 'ORD-1043', name: 'Kavya Nair', phone: '99102 37465', date: 'Yesterday, 01:15 PM', slot: 'Afternoon · 12 PM - 3 PM', items: 'Dragonfruit 500g, Kiwi 500g', count: 2, total: 495, status: 'Out for Delivery' },
+    { id: 'ORD-1042', name: 'Ankit Gupta', phone: '98220 56430', date: '24 Aug, 11:30 AM', slot: 'Morning · 7 AM - 10 AM', items: 'Cauliflower 1pc, Carrot 1kg', count: 2, total: 178, status: 'Delivered' },
+    { id: 'ORD-1041', name: 'Sneha Kapoor', phone: '97721 34510', date: '24 Aug, 09:10 AM', slot: 'Afternoon · 12 PM - 3 PM', items: 'Apple 1kg, Banana 1kg, Spinach 500g', count: 3, total: 405, status: 'Pending' }
+  ];
+  const pendingOrders = orders.filter((order) => order.status === 'Pending').length;
+  const deliveryOrders = orders.filter((order) => order.status === 'Out for Delivery').length;
+  const deliveredOrders = orders.filter((order) => order.status === 'Delivered').length;
+  const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
+  const visibleOrders = orderFilter === 'All' ? orders : orders.filter((order) => order.status === orderFilter);
 
   // Success notifications
   const [productSuccess, setProductSuccess] = useState(false);
@@ -93,6 +115,35 @@ export default function AdminDashboardPage() {
     icon: 'Leaf'
   });
 
+  useEffect(() => {
+    const savedNotifications = localStorage.getItem('freshvana_admin_notifications');
+    if (savedNotifications) {
+      try {
+        const parsed = JSON.parse(savedNotifications);
+        if (Array.isArray(parsed)) setNotifications(parsed);
+      } catch {
+        // Ignore malformed browser-only notification data.
+      }
+    }
+  }, []);
+
+  const sendNotification = (event: React.FormEvent) => {
+    event.preventDefault();
+    const notification = {
+      id: `notice-${Date.now()}`,
+      title: notificationDraft.title.trim(),
+      message: notificationDraft.message.trim(),
+      audience: notificationDraft.audience,
+      sentAt: new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
+    };
+    const updated = [notification, ...notifications];
+    setNotifications(updated);
+    localStorage.setItem('freshvana_admin_notifications', JSON.stringify(updated));
+    setNotificationDraft({ title: '', message: '', audience: 'All customers' });
+    setNotificationSuccess(true);
+    setTimeout(() => setNotificationSuccess(false), 3000);
+  };
+
   const availablePresetImages = [
     { label: 'Carrots Cutout', path: '/images/carrots.png' },
     { label: 'Apples Cutout', path: '/images/apple.png' },
@@ -144,7 +195,30 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="py-5 bg-cream" style={{ paddingTop: '180px', minHeight: '85vh' }}>
-      <div className="container py-3">
+      <aside className="admin-sidebar d-none d-xl-flex flex-column bg-white border-end shadow-sm">
+        <div className="px-4 pt-4 pb-3 border-bottom">
+          <div className="d-flex align-items-center gap-2 text-success fw-bold small mb-2"><ShieldAlert size={18} /> WORKSPACE</div>
+          <h5 className="font-heading fw-bold mb-1">Super Admin</h5>
+          <p className="small text-muted mb-0">Frontend control center</p>
+        </div>
+        <nav className="p-3 d-flex flex-column gap-1 flex-grow-1">
+          {[
+            { id: 'products', label: 'Products & Inventory', icon: Package },
+            { id: 'categories', label: 'Categories', icon: Layers },
+            { id: 'orders', label: 'Orders', icon: ShoppingBag },
+            { id: 'notifications', label: 'Send Notifications', icon: Truck },
+            { id: 'system', label: 'System Management', icon: ShieldAlert }
+          ].map((item) => {
+            const Icon = item.icon;
+            return <button key={item.id} onClick={() => setActiveTab(item.id as typeof activeTab)} className={`btn text-start rounded-3 px-3 py-2 fw-semibold d-flex align-items-center gap-2 ${activeTab === item.id ? 'btn-success text-white' : 'btn-light text-dark border-0'}`} style={activeTab === item.id ? { background: '#0A6836' } : {}}><Icon size={17} />{item.label}</button>;
+          })}
+        </nav>
+        <div className="p-3 border-top">
+          <Link href="/" className="btn btn-outline-success w-100 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2"><Eye size={16} />View storefront</Link>
+        </div>
+      </aside>
+
+      <div className="container py-3 admin-main-container">
         {/* Top Header Navigation */}
         <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4 pb-3 border-bottom">
           <div>
@@ -212,7 +286,7 @@ export default function AdminDashboardPage() {
                 <ShoppingBag size={24} />
               </div>
               <div>
-                <h3 className="font-heading fw-extrabold text-dark mb-0">128</h3>
+                <h3 className="font-heading fw-extrabold text-dark mb-0">{orders.length}</h3>
                 <span className="text-muted small">Total Orders</span>
               </div>
             </div>
@@ -224,15 +298,15 @@ export default function AdminDashboardPage() {
                 <Sparkles size={24} />
               </div>
               <div>
-                <h3 className="font-heading fw-extrabold text-dark mb-0">₹48,250</h3>
-                <span className="text-muted small">Total Revenue</span>
+                <h3 className="font-heading fw-extrabold text-dark mb-0">₹{totalRevenue.toLocaleString('en-IN')}</h3>
+                <span className="text-muted small">Order Value</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Section Tabs Switcher */}
-        <div className="d-flex align-items-center gap-2 mb-4 bg-white p-2 rounded-4 shadow-sm border w-100 overflow-auto">
+        <div className="d-flex align-items-center gap-2 mb-4 bg-white p-2 rounded-4 shadow-sm border w-100 overflow-auto d-xl-none">
           <button
             onClick={() => setActiveTab('products')}
             className={`btn rounded-pill px-4 py-2 fw-bold text-nowrap ${
@@ -277,7 +351,7 @@ export default function AdminDashboardPage() {
         {activeTab === 'products' && (
           <div className="row g-4">
             {/* Left Form: Add New Product */}
-            <div className="col-lg-5">
+            <div className="col-lg-4 col-xl-3">
               <div className="bg-white rounded-5 p-4 p-md-5 shadow-sm border">
                 <h4 className="font-heading fw-bold text-dark mb-3 d-flex align-items-center gap-2">
                   <Plus size={20} className="text-success" />
@@ -451,7 +525,7 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Right: Live Inventory Table & Super Admin Control */}
-            <div className="col-lg-7">
+            <div className="col-lg-8 col-xl-9">
               <div className="bg-white rounded-5 p-4 shadow-sm border">
                 <div className="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
                   <div>
@@ -468,8 +542,8 @@ export default function AdminDashboardPage() {
                   </span>
                 </div>
 
-                <div className="table-responsive" style={{ maxHeight: '580px', overflowY: 'auto' }}>
-                  <table className="table table-hover align-middle">
+                <div className="table-responsive d-none d-xl-block" style={{ maxHeight: '580px', overflowY: 'auto' }}>
+                  <table className="table table-hover align-middle admin-inventory-table">
                     <thead className="table-light small text-muted">
                       <tr>
                         <th>Fruit / Vegetable</th>
@@ -477,7 +551,7 @@ export default function AdminDashboardPage() {
                         <th>Price</th>
                         <th>Super Admin Store Add</th>
                         <th>Stock</th>
-                        <th className="text-end">Action</th>
+                        <th className="text-end admin-action-heading">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -536,7 +610,15 @@ export default function AdminDashboardPage() {
                               </button>
                             </td>
 
-                            <td className="text-end">
+                            <td className="text-end admin-action-cell">
+                              <div className="d-flex align-items-center justify-content-end gap-2">
+                                <button
+                                onClick={() => setViewingProduct(p)}
+                                className="btn btn-sm btn-light text-success rounded-circle p-2 shadow-sm border"
+                                title="View complete produce details"
+                              >
+                                <Eye size={14} />
+                              </button>
                               <button
                                 onClick={() => deleteProduct(p.id)}
                                 className="btn btn-sm btn-light text-danger rounded-circle p-2 shadow-sm border"
@@ -544,12 +626,37 @@ export default function AdminDashboardPage() {
                               >
                                 <Trash2 size={14} />
                               </button>
+                              </div>
                             </td>
                           </tr>
                         );
                       })}
                     </tbody>
                   </table>
+                </div>
+
+                <div className="d-xl-none d-flex flex-column gap-3">
+                  {allProducts.map((product) => {
+                    const isLive = product.isAdded !== false;
+                    return (
+                      <article key={product.id} className="admin-product-card border rounded-4 p-3">
+                        <div className="d-flex align-items-start gap-3">
+                          <div className="position-relative rounded-3 bg-light flex-shrink-0" style={{ width: '60px', height: '60px' }}>
+                            <Image src={product.image} alt={product.name} fill className="object-fit-contain p-1" />
+                          </div>
+                          <div className="flex-grow-1 min-w-0">
+                            <div className="d-flex align-items-start justify-content-between gap-2"><div><strong className="d-block text-dark font-heading">{product.name}</strong><span className="small text-muted">{product.category} · {product.badge}</span></div><strong className="text-success text-nowrap">₹{product.price}</strong></div>
+                            <div className="d-flex flex-wrap gap-2 mt-3">
+                              <button type="button" onClick={() => toggleProductAdded(product.id)} className={`btn btn-sm rounded-pill px-3 fw-bold ${isLive ? 'btn-success' : 'btn-outline-secondary'}`} style={isLive ? { background: '#0A6836' } : {}}>{isLive ? 'Live on Store' : 'Hidden'}</button>
+                              <button onClick={() => toggleStock(product.id)} className={`btn btn-sm rounded-pill px-3 fw-bold ${product.inStock ? 'btn-outline-success' : 'btn-outline-secondary'}`}>{product.inStock ? 'In Stock' : 'Out of Stock'}</button>
+                              <button onClick={() => setViewingProduct(product)} className="btn btn-sm btn-light border text-success rounded-circle" aria-label={`View ${product.name}`}><Eye size={15} /></button>
+                              <button onClick={() => deleteProduct(product.id)} className="btn btn-sm btn-light border text-danger rounded-circle" aria-label={`Delete ${product.name}`}><Trash2 size={15} /></button>
+                            </div>
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -695,7 +802,29 @@ export default function AdminDashboardPage() {
         {/* TAB 3: CUSTOMER ORDERS */}
         {activeTab === 'orders' && (
           <div className="bg-white rounded-5 p-4 shadow-sm border">
-            <h4 className="font-heading fw-bold text-dark mb-3">Recent Customer Orders Log</h4>
+            <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+              <div>
+                <div className="d-flex align-items-center gap-2 text-success small fw-bold mb-1"><ShoppingBag size={17} /> ORDER MANAGEMENT</div>
+                <h4 className="font-heading fw-bold text-dark mb-1">Customer orders & delivery status</h4>
+                <p className="small text-muted mb-0">See every customer, their items, delivery slot and order progress.</p>
+              </div>
+              <div className="d-flex gap-2 flex-wrap">
+                {(['All', 'Pending', 'Out for Delivery', 'Delivered'] as const).map((filter) => <button key={filter} onClick={() => setOrderFilter(filter)} className={`btn btn-sm rounded-pill px-3 fw-bold ${orderFilter === filter ? 'btn-success' : 'btn-light border'}`} style={orderFilter === filter ? { background: '#0A6836' } : {}}>{filter === 'All' ? `All (${orders.length})` : filter}</button>)}
+              </div>
+            </div>
+
+            <div className="row g-3 mb-4">
+              <div className="col-6 col-lg-3"><div className="admin-order-stat bg-light rounded-4 p-3 h-100"><span className="small text-muted d-block">Total orders</span><strong className="fs-3">{orders.length}</strong></div></div>
+              <div className="col-6 col-lg-3"><div className="admin-order-stat bg-warning bg-opacity-10 rounded-4 p-3 h-100"><span className="small text-muted d-block">Pending action</span><strong className="fs-3 text-warning">{pendingOrders}</strong></div></div>
+              <div className="col-6 col-lg-3"><div className="admin-order-stat bg-primary bg-opacity-10 rounded-4 p-3 h-100"><span className="small text-muted d-block">Out for delivery</span><strong className="fs-3 text-primary">{deliveryOrders}</strong></div></div>
+              <div className="col-6 col-lg-3"><div className="admin-order-stat bg-success bg-opacity-10 rounded-4 p-3 h-100"><span className="small text-muted d-block">Delivered</span><strong className="fs-3 text-success">{deliveredOrders}</strong></div></div>
+            </div>
+
+            <div className="row g-3 mb-4">
+              {visibleOrders.map((order) => <div className="col-12 col-xl-6" key={order.id}><div className="border rounded-4 p-3 h-100 admin-order-card"><div className="d-flex justify-content-between gap-3"><div><strong className="font-heading">{order.name}</strong><span className="d-block small text-muted">{order.phone} · {order.id}</span></div><span className={`badge align-self-start rounded-pill px-3 py-2 ${order.status === 'Delivered' ? 'bg-success' : order.status === 'Out for Delivery' ? 'bg-primary' : 'bg-warning text-dark'}`}>{order.status}</span></div><p className="small text-dark mb-1 mt-3">{order.items}</p><div className="d-flex justify-content-between gap-2 small text-muted"><span>{order.count} items · {order.slot}</span><strong className="text-success">₹{order.total}</strong></div><small className="text-muted d-block mt-2">Ordered {order.date}</small></div></div>)}
+            </div>
+
+            <h5 className="font-heading fw-bold text-dark mb-3">Recent orders table</h5>
 
             <div className="table-responsive">
               <table className="table table-hover align-middle">
@@ -732,6 +861,82 @@ export default function AdminDashboardPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'notifications' && (
+          <div className="row g-4">
+            <div className="col-lg-5">
+              <div className="bg-white rounded-5 p-4 p-md-5 shadow-sm border">
+                <div className="d-flex align-items-center gap-2 mb-2 text-success"><Truck size={20} /><span className="fw-bold small">CUSTOMER COMMUNICATION</span></div>
+                <h4 className="font-heading fw-bold mb-2">Send a notification</h4>
+                <p className="small text-muted mb-4">Create announcements for customers. This is saved only in this browser until backend messaging is connected.</p>
+                {notificationSuccess && <div className="alert alert-success rounded-4 small fw-bold">Notification saved successfully.</div>}
+                <form onSubmit={sendNotification} className="d-flex flex-column gap-3">
+                  <div><label className="form-label small fw-bold">Send to</label><select className="form-select rounded-3" value={notificationDraft.audience} onChange={(e) => setNotificationDraft({ ...notificationDraft, audience: e.target.value })}><option>All customers</option><option>Active customers</option><option>New customers</option></select></div>
+                  <div><label className="form-label small fw-bold">Notification title</label><input required className="form-control rounded-3" placeholder="e.g. Fresh mangoes are here!" value={notificationDraft.title} onChange={(e) => setNotificationDraft({ ...notificationDraft, title: e.target.value })} /></div>
+                  <div><label className="form-label small fw-bold">Message</label><textarea required rows={4} className="form-control rounded-3" placeholder="Write your customer update..." value={notificationDraft.message} onChange={(e) => setNotificationDraft({ ...notificationDraft, message: e.target.value })} /></div>
+                  <button className="btn btn-success rounded-pill py-3 fw-bold" style={{ background: '#0A6836' }}>Save notification →</button>
+                </form>
+              </div>
+            </div>
+            <div className="col-lg-7">
+              <div className="bg-white rounded-5 p-4 shadow-sm border h-100">
+                <h4 className="font-heading fw-bold mb-1">Notification history</h4>
+                <p className="small text-muted mb-4">{notifications.length} browser-saved notification{notifications.length === 1 ? '' : 's'}</p>
+                {notifications.length === 0 ? <div className="text-center text-muted py-5"><Truck size={34} className="mb-2" /><p className="mb-0">No notifications created yet.</p></div> : <div className="d-flex flex-column gap-3">{notifications.map((notification) => <div key={notification.id} className="border rounded-4 p-3"><div className="d-flex justify-content-between gap-3"><strong>{notification.title}</strong><span className="badge bg-success bg-opacity-10 text-success align-self-start">{notification.audience}</span></div><p className="small text-muted mb-2 mt-2">{notification.message}</p><small className="text-muted">Saved {notification.sentAt}</small></div>)}</div>}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'system' && (
+          <div className="row g-4">
+            <div className="col-md-6 col-xl-4"><div className="bg-white rounded-5 p-4 shadow-sm border h-100"><ShieldAlert className="text-success mb-3" size={28} /><h5 className="font-heading fw-bold">Access management</h5><p className="small text-muted">All signed-in users have Super Admin workspace access in the current frontend setup.</p><span className="badge bg-success">Frontend enabled</span></div></div>
+            <div className="col-md-6 col-xl-4"><div className="bg-white rounded-5 p-4 shadow-sm border h-100"><Package className="text-success mb-3" size={28} /><h5 className="font-heading fw-bold">Store data</h5><p className="small text-muted">Products, categories and notification drafts are stored locally in this browser for now.</p><Link href="/" className="btn btn-sm btn-outline-success rounded-pill">Open storefront</Link></div></div>
+            <div className="col-md-6 col-xl-4"><div className="bg-white rounded-5 p-4 shadow-sm border h-100"><Layers className="text-success mb-3" size={28} /><h5 className="font-heading fw-bold">Backend connection</h5><p className="small text-muted">Backend configuration is intentionally not available here. No Marketplace-Backend files or APIs have been changed.</p><span className="badge bg-secondary">Not connected</span></div></div>
+          </div>
+        )}
+
+        {viewingProduct && (
+          <div
+            className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center p-3"
+            style={{ background: 'rgba(17, 24, 39, 0.62)', zIndex: 2000 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${viewingProduct.name} details`}
+            onClick={() => setViewingProduct(null)}
+          >
+            <div
+              className="bg-white rounded-5 shadow-lg p-4 p-md-5 w-100"
+              style={{ maxWidth: '720px', maxHeight: '90vh', overflowY: 'auto' }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="d-flex align-items-start justify-content-between gap-3 mb-4">
+                <div className="d-flex align-items-center gap-3">
+                  <div className="position-relative rounded-4 bg-light" style={{ width: '88px', height: '88px' }}>
+                    <Image src={viewingProduct.image} alt={viewingProduct.name} fill className="object-fit-contain p-2" />
+                  </div>
+                  <div>
+                    <span className="badge bg-success bg-opacity-10 text-success mb-1">{viewingProduct.category}</span>
+                    <h3 className="font-heading fw-bold mb-1">{viewingProduct.name}</h3>
+                    <span className="text-success fw-bold">₹{viewingProduct.price}</span>
+                    <span className="text-muted text-decoration-line-through ms-2">₹{viewingProduct.originalPrice}</span>
+                  </div>
+                </div>
+                <button onClick={() => setViewingProduct(null)} className="btn btn-light rounded-circle border" aria-label="Close details">×</button>
+              </div>
+
+              <p className="text-muted mb-4">{viewingProduct.description}</p>
+              <div className="row g-3 small">
+                <div className="col-6 col-md-4"><div className="bg-light rounded-3 p-3"><strong>Availability</strong><br />{viewingProduct.inStock ? 'In stock' : 'Out of stock'}</div></div>
+                <div className="col-6 col-md-4"><div className="bg-light rounded-3 p-3"><strong>Store status</strong><br />{viewingProduct.isAdded !== false ? 'Live on store' : 'Hidden'}</div></div>
+                <div className="col-6 col-md-4"><div className="bg-light rounded-3 p-3"><strong>Rating</strong><br />{viewingProduct.rating} / 5 ({viewingProduct.reviewsCount} reviews)</div></div>
+                <div className="col-6 col-md-4"><div className="bg-light rounded-3 p-3"><strong>Available sizes</strong><br />{viewingProduct.weights.join(', ')}</div></div>
+                <div className="col-6 col-md-4"><div className="bg-light rounded-3 p-3"><strong>Origin</strong><br />{viewingProduct.nutrition.origin}</div></div>
+                <div className="col-6 col-md-4"><div className="bg-light rounded-3 p-3"><strong>Best before</strong><br />{viewingProduct.nutrition.bestBefore}</div></div>
+              </div>
             </div>
           </div>
         )}

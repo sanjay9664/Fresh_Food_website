@@ -28,7 +28,7 @@ export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { products } = useProducts();
-  const { addToCart } = useCart();
+  const { addToCart, remainingQuantityKg } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
   const productId = params?.id as string;
@@ -51,6 +51,10 @@ export default function ProductDetailPage() {
 
   const currentPrice = Math.round(product.price * getMultiplier(selectedWeight));
   const currentOriginalPrice = Math.round(product.originalPrice * getMultiplier(selectedWeight));
+  const remainingKg = remainingQuantityKg(product);
+  const canAddSelectedWeight = product.inStock && remainingKg >= getMultiplier(selectedWeight);
+  const maxQuantity = Number.isFinite(remainingKg) ? Math.floor(remainingKg / getMultiplier(selectedWeight)) : Number.MAX_SAFE_INTEGER;
+  const isSoldOut = !product.inStock || remainingKg <= 0;
 
   return (
     <div className="py-5 bg-cream" style={{ paddingTop: '160px', minHeight: '85vh' }}>
@@ -135,6 +139,11 @@ export default function ProductDetailPage() {
               <p className="text-muted mb-4" style={{ lineHeight: 1.6 }}>
                 {product.description}
               </p>
+              {Number.isFinite(remainingKg) && (
+                <div className={`small fw-bold mb-3 ${isSoldOut ? 'text-danger' : 'text-success'}`}>
+                  {isSoldOut ? 'Currently sold out' : `${remainingKg.toFixed(2).replace(/\.00$/, '')} kg currently available`}
+                </div>
+              )}
 
               {/* Weight Selector */}
               <div className="mb-4">
@@ -173,7 +182,8 @@ export default function ProductDetailPage() {
                   <span className="px-3 fw-bold">{quantity}</span>
                   <button
                     type="button"
-                    onClick={() => setQuantity(quantity + 1)}
+                    onClick={() => setQuantity(Math.min(maxQuantity, quantity + 1))}
+                    disabled={!canAddSelectedWeight || quantity >= maxQuantity}
                     className="btn btn-sm btn-link p-0 text-dark border-0"
                   >
                     <Plus size={14} />
@@ -182,6 +192,7 @@ export default function ProductDetailPage() {
 
                 <button
                   onClick={() => addToCart(product, selectedWeight, quantity)}
+                  disabled={!canAddSelectedWeight}
                   className="btn btn-success btn-lg rounded-pill px-5 py-3 fw-bold d-flex align-items-center justify-content-center gap-2 shadow flex-grow-1 border-0"
                   style={{ background: '#0A6836' }}
                 >

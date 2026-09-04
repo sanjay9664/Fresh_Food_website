@@ -15,7 +15,7 @@ interface QuickViewModalProps {
 }
 
 export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => {
-  const { cart, addToCart, updateQuantity, removeFromCart } = useCart();
+  const { cart, addToCart, updateQuantity, removeFromCart, remainingQuantityKg } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
   const [selectedWeight, setSelectedWeight] = useState<string>(product?.weights[0] || '1kg');
@@ -53,6 +53,9 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose
 
   const calculatedPrice = Math.round(product.price * getMultiplier(selectedWeight));
   const calculatedOriginalPrice = Math.round(product.originalPrice * getMultiplier(selectedWeight));
+  const remainingKg = remainingQuantityKg(product);
+  const canAddSelectedWeight = product.inStock && remainingKg >= getMultiplier(selectedWeight);
+  const isSoldOut = !product.inStock || remainingKg <= 0;
 
   const handleMinus = () => {
     if (cartItem) {
@@ -229,6 +232,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose
                     <button
                       type="button"
                       onClick={handlePlus}
+                      disabled={!canAddSelectedWeight}
                       className="btn btn-sm btn-light rounded-circle p-1 text-dark border-0 d-flex align-items-center justify-content-center"
                       style={{ width: '28px', height: '28px' }}
                       title="Increase Quantity"
@@ -244,11 +248,12 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose
                 <div className="d-flex gap-2">
                   <button
                     onClick={handleAddToCart}
+                    disabled={!canAddSelectedWeight}
                     className="btn btn-success rounded-pill py-3 flex-grow-1 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm"
                     style={{ background: cartItem ? '#064E28' : '#0A6836', border: 'none' }}
                   >
                     <ShoppingBag size={18} />
-                    <span>{cartItem ? `In Basket (${currentQty}) • ₹${calculatedPrice * currentQty}` : `Add to Basket (₹${calculatedPrice * currentQty})`}</span>
+                    <span>{isSoldOut ? 'Sold out' : cartItem ? `In Basket (${currentQty}) • ₹${calculatedPrice * currentQty}` : `Add to Basket (₹${calculatedPrice * currentQty})`}</span>
                   </button>
 
                   <button

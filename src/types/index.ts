@@ -51,6 +51,8 @@ export interface Product {
   isFeatured?: boolean;
   isFlashSale?: boolean;
   isAdded?: boolean;
+  /** Total stock published by the super admin, measured in kilograms. */
+  stockQuantityKg?: number;
 }
 
 export interface Category {
@@ -106,4 +108,3 @@ export interface DeliverySlot {
   label?: string;
   isExpress?: boolean;
 }
-

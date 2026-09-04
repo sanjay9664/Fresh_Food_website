@@ -342,14 +342,14 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .admin-shell {
   display: flex;
   min-height: 100vh;
-  padding-top: 88px;
+  padding-top: 0;
   background: #F8FAFB;
 }
 
 /* ---- Premium Dark Sidebar ---- */
 .admin-sidebar-v2 {
   position: fixed;
-  top: 88px;
+  top: 0;
   left: 0;
   bottom: 0;
   width: 260px;
@@ -483,7 +483,7 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .admin-content-area {
   flex: 1;
   padding: 28px 32px 48px;
-  min-height: calc(100vh - 88px);
+  min-height: 100vh;
 }
 
 @media (min-width: 1200px) {
@@ -943,10 +943,11 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 }
 
 .admin-product-name {
-  font-family: var(--font-heading);
-  font-size: 0.88rem;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
   font-weight: 600;
-  color: #1F2937;
+  color: #0F172A;
+  letter-spacing: -0.01em;
 }
 
 .admin-product-badge {

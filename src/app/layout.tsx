@@ -22,25 +22,27 @@ function MainApp({ children }: { children: React.ReactNode }) {
   const { openQuickView } = useQuickView();
 
   const isLoginPage = pathname === '/login';
+  const isAdminPage = pathname?.startsWith('/admin');
+  const isMinimalPage = isLoginPage || isAdminPage;
 
   return (
     <>
-      {/* Hide Navbar on Login Page */}
-      {!isLoginPage && <Navbar onOpenSearch={() => setIsSearchOpen(true)} />}
+      {/* Hide Navbar on Login and Admin Pages */}
+      {!isMinimalPage && <Navbar onOpenSearch={() => setIsSearchOpen(true)} />}
 
-      <main className={!isLoginPage ? "pb-5 pb-md-0 mb-4 mb-md-0" : ""} style={{ minHeight: isLoginPage ? '100vh' : '80vh' }}>
+      <main className={!isMinimalPage ? "pb-5 pb-md-0 mb-4 mb-md-0" : ""} style={{ minHeight: isMinimalPage ? '100vh' : '80vh' }}>
         {children}
       </main>
 
-      {/* Hide Footer on Login Page */}
-      {!isLoginPage && <Footer />}
+      {/* Hide Footer on Login and Admin Pages */}
+      {!isMinimalPage && <Footer />}
 
       {/* Mobile App Style Bottom Navigation Bar */}
-      {!isLoginPage && <MobileBottomNav onOpenSearch={() => setIsSearchOpen(true)} />}
+      {!isMinimalPage && <MobileBottomNav onOpenSearch={() => setIsSearchOpen(true)} />}
 
-      {!isLoginPage && <CartDrawer />}
+      {!isMinimalPage && <CartDrawer />}
 
-      {!isLoginPage && (
+      {!isMinimalPage && (
         <SearchModal
           isOpen={isSearchOpen}
           onClose={() => setIsSearchOpen(false)}

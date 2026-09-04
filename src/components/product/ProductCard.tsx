@@ -17,7 +17,7 @@ interface ProductCardProps {
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }) => {
   const router = useRouter();
-  const { cart, addToCart, updateQuantity, removeFromCart, setIsCartOpen } = useCart();
+  const { cart, addToCart, updateQuantity, removeFromCart, setIsCartOpen, remainingQuantityKg } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
   const [selectedWeight, setSelectedWeight] = useState<string>(product.weights[0] || '1kg');
@@ -41,6 +41,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
 
   const currentPrice = Math.round(product.price * getMultiplier(selectedWeight));
   const currentOriginalPrice = Math.round(product.originalPrice * getMultiplier(selectedWeight));
+  const remainingKg = remainingQuantityKg(product);
+  const canAddSelectedWeight = product.inStock && remainingKg >= getMultiplier(selectedWeight);
+  const isSoldOut = !product.inStock || remainingKg <= 0;
 
   const handleMinus = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -121,9 +124,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
       >
         <div className="w-100 h-100 d-flex align-items-center justify-content-center p-2">
           <Image
-            src={product.image}
+            src={product.image || '/images/carrots.png'}
             alt={product.name}
             fill
+            unoptimized
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = '/images/carrots.png';
+            }}
             className="object-fit-contain p-2 transition-all"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
           />
@@ -203,6 +210,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
           </Link>
         </div>
 
+        {Number.isFinite(remainingKg) && (
+          <small className={`d-block mb-2 fw-semibold ${isSoldOut ? 'text-danger' : 'text-success'}`}>
+            {isSoldOut ? 'Sold out' : `${remainingKg.toFixed(2).replace(/\.00$/, '')} kg available`}
+          </small>
+        )}
+
         {/* Action Row: Dynamic Add / Counter Pill + Wishlist Heart */}
         <div className="pt-2 border-top">
           <div className="d-flex align-items-center justify-content-between gap-2">
@@ -247,6 +260,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
                 <button
                   type="button"
                   onClick={handlePlus}
+                  disabled={!canAddSelectedWeight}
                   className="btn btn-sm btn-white rounded-circle p-0 text-dark border-0 d-flex align-items-center justify-content-center shadow-xs"
                   style={{ width: '28px', height: '28px', background: '#FFFFFF', color: '#0A6836' }}
                   title="Increase Quantity"
@@ -259,6 +273,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
               <button
                 type="button"
                 onClick={handleAddToCart}
+                disabled={!canAddSelectedWeight}
                 className="btn btn-success rounded-pill flex-grow-1 py-2 px-3 fw-extrabold d-flex align-items-center justify-content-center gap-1 border-0 shadow-sm text-nowrap"
                 style={{
                   background: 'linear-gradient(135deg, #0A6836 0%, #064E28 100%)',
@@ -268,7 +283,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
                 }}
               >
                 <Plus size={16} strokeWidth={3} />
-                <span>ADD TO CART</span>
+                <span>{isSoldOut ? 'SOLD OUT' : 'ADD TO CART'}</span>
               </button>
             )}
 

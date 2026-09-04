@@ -36,7 +36,8 @@ import {
   Store,
   Globe,
   AlertCircle,
-  X
+  X,
+  Menu
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -55,6 +56,7 @@ export default function AdminDashboardPage() {
   } = useProducts();
 
   const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'orders' | 'notifications' | 'system'>('products');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
   const [notifications, setNotifications] = useState<Array<{ id: string; title: string; message: string; audience: string; sentAt: string }>>([]);
   const [notificationDraft, setNotificationDraft] = useState({ title: '', message: '', audience: 'All customers' });
@@ -98,6 +100,7 @@ export default function AdminDashboardPage() {
     reviewsCount: 12,
     badge: 'Organic' as Product['badge'],
     inStock: true,
+    stockQuantityKg: 20,
     image: '/images/carrots.png',
     thumbnails: ['/images/carrots.png'],
     description: '100% certified pesticide-free organic harvest freshly collected from clean local farms.',
@@ -281,8 +284,121 @@ export default function AdminDashboardPage() {
         </div>
       </aside>
 
+      {/* Mobile Drawer Overlay */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <div className="d-xl-none position-fixed top-0 start-0 w-100 h-100" style={{ zIndex: 3000 }}>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="position-absolute top-0 start-0 w-100 h-100"
+              style={{ background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)' }}
+            />
+            <motion.aside
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 250 }}
+              className="position-absolute top-0 start-0 h-100 d-flex flex-column"
+              style={{ width: '280px', background: 'linear-gradient(180deg, #0F172A 0%, #1A2332 100%)', boxShadow: '4px 0 24px rgba(0,0,0,0.3)' }}
+            >
+              <div className="p-3 border-bottom border-secondary border-opacity-25 d-flex align-items-center justify-content-between">
+                <div className="d-flex align-items-center gap-2">
+                  <div className="admin-brand-icon">
+                    <Leaf size={18} />
+                  </div>
+                  <div>
+                    <h6 className="mb-0 text-white fw-bold">Fresh<span style={{ color: '#4ADE80' }}>Vana</span></h6>
+                    <span className="d-block text-white-50" style={{ fontSize: '0.65rem' }}>ADMIN PANEL</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="btn btn-sm text-white-50 p-1 border-0"
+                  aria-label="Close menu"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <nav className="p-3 d-flex flex-column gap-2 flex-grow-1">
+                <span className="admin-sidebar-label">NAVIGATION</span>
+                {sidebarItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setActiveTab(item.id as typeof activeTab);
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`admin-sidebar-item ${isActive ? 'active' : ''}`}
+                    >
+                      <div className="d-flex align-items-center gap-3">
+                        <div className={`admin-sidebar-icon ${isActive ? 'active' : ''}`}>
+                          <Icon size={18} />
+                        </div>
+                        <span>{item.label}</span>
+                      </div>
+                      {item.badge !== undefined && item.badge > 0 && (
+                        <span className={`admin-sidebar-badge ${isActive ? 'active' : ''}`}>
+                          {item.badge}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </nav>
+              <div className="p-3 border-top border-secondary border-opacity-25">
+                <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="admin-sidebar-storefront-btn">
+                  <Globe size={16} />
+                  <span>View Storefront</span>
+                  <ChevronRight size={14} className="ms-auto" />
+                </Link>
+              </div>
+            </motion.aside>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Main Content */}
       <div className="admin-content-area">
+        {/* Mobile Header Bar */}
+        <div className="d-xl-none mb-3">
+          <div className="d-flex align-items-center justify-content-between p-3 bg-white rounded-3 border shadow-sm">
+            <div className="d-flex align-items-center gap-2">
+              <button
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="btn btn-light border p-2 d-flex align-items-center justify-content-center rounded-2"
+                aria-label="Toggle navigation menu"
+              >
+                <Menu size={18} className="text-dark" />
+              </button>
+              <div className="d-flex align-items-center gap-2">
+                <div className="admin-brand-icon" style={{ width: '30px', height: '30px', borderRadius: '8px' }}>
+                  <Leaf size={15} />
+                </div>
+                <span className="fw-bold text-dark" style={{ fontSize: '0.95rem' }}>
+                  Fresh<span style={{ color: '#059669' }}>Vana</span>
+                </span>
+              </div>
+            </div>
+
+            <div className="d-flex align-items-center gap-2">
+              <button onClick={resetToDefaults} className="admin-btn-outline-danger p-2 px-2" style={{ fontSize: '0.75rem' }}>
+                <RotateCcw size={12} />
+                <span>Reset</span>
+              </button>
+              <Link href="/" className="admin-btn-primary p-2 px-2" style={{ fontSize: '0.75rem' }}>
+                <Eye size={12} />
+                <span>Store</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+
         {/* Top Header Bar */}
         <header className="admin-topbar">
           <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
@@ -307,7 +423,7 @@ export default function AdminDashboardPage() {
               </p>
             </div>
 
-            <div className="d-flex align-items-center gap-2 flex-shrink-0">
+            <div className="d-none d-xl-flex align-items-center gap-2 flex-shrink-0">
               <button
                 onClick={resetToDefaults}
                 className="admin-btn-outline-danger"
@@ -461,6 +577,21 @@ export default function AdminDashboardPage() {
                           />
                         </div>
                       </div>
+                      <div className="col-12">
+                        <div className="admin-form-group">
+                          <label className="admin-form-label">Available stock (kg)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.25"
+                            className="admin-form-input"
+                            value={newProduct.stockQuantityKg}
+                            onChange={(e) => setNewProduct({ ...newProduct, stockQuantityKg: Math.max(0, Number(e.target.value)) })}
+                            required
+                          />
+                          <small className="text-muted">Customer purchases are limited to this total quantity across all pack sizes.</small>
+                        </div>
+                      </div>
                     </div>
 
                     {/* Image Source */}
@@ -469,7 +600,12 @@ export default function AdminDashboardPage() {
                       <div className="admin-toggle-group">
                         <button
                           type="button"
-                          onClick={() => setImageMode('preset')}
+                          onClick={() => {
+                            setImageMode('preset');
+                            if (!newProduct.image || newProduct.image.startsWith('http')) {
+                              setNewProduct({ ...newProduct, image: '/images/carrots.png' });
+                            }
+                          }}
                           className={`admin-toggle-btn ${imageMode === 'preset' ? 'active' : ''}`}
                         >
                           <ImageIcon size={13} />
@@ -477,7 +613,12 @@ export default function AdminDashboardPage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => setImageMode('custom')}
+                          onClick={() => {
+                            setImageMode('custom');
+                            if (newProduct.image.startsWith('/images/')) {
+                              setNewProduct({ ...newProduct, image: '' });
+                            }
+                          }}
                           className={`admin-toggle-btn ${imageMode === 'custom' ? 'active' : ''}`}
                         >
                           <Globe size={13} />
@@ -496,13 +637,33 @@ export default function AdminDashboardPage() {
                           ))}
                         </select>
                       ) : (
-                        <input
-                          type="text"
-                          className="admin-form-input mt-2"
-                          placeholder="https://example.com/image.png"
-                          value={newProduct.image}
-                          onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })}
-                        />
+                        <div className="position-relative mt-2">
+                          <input
+                            type="text"
+                            className="admin-form-input pe-4"
+                            placeholder="Paste image link e.g. https://images.pexels.com/..."
+                            value={newProduct.image}
+                            onChange={(e) => {
+                              let val = e.target.value;
+                              // Clean up concatenated local preset path if user pasted over existing value
+                              const httpIdx = val.indexOf('http');
+                              if (httpIdx > 0) {
+                                val = val.substring(httpIdx);
+                              }
+                              setNewProduct({ ...newProduct, image: val.trim() });
+                            }}
+                          />
+                          {newProduct.image && (
+                            <button
+                              type="button"
+                              onClick={() => setNewProduct({ ...newProduct, image: '' })}
+                              className="btn btn-sm text-muted position-absolute end-0 top-50 translate-middle-y me-2 p-0 border-0"
+                              title="Clear URL"
+                            >
+                              <X size={14} />
+                            </button>
+                          )}
+                        </div>
                       )}
 
                       {/* Image Preview */}
@@ -512,6 +673,10 @@ export default function AdminDashboardPage() {
                             src={newProduct.image || '/images/carrots.png'}
                             alt="Preview"
                             fill
+                            unoptimized
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '/images/carrots.png';
+                            }}
                             className="object-fit-contain"
                           />
                         </div>
@@ -607,7 +772,16 @@ export default function AdminDashboardPage() {
                             <td>
                               <div className="d-flex align-items-center gap-3">
                                 <div className="admin-product-thumb">
-                                  <Image src={p.image} alt={p.name} fill className="object-fit-contain p-1" />
+                                  <Image
+                                    src={p.image}
+                                    alt={p.name}
+                                    fill
+                                    unoptimized
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).src = '/images/carrots.png';
+                                    }}
+                                    className="object-fit-contain p-1"
+                                  />
                                 </div>
                                 <div>
                                   <strong className="d-block admin-product-name">{p.name}</strong>
@@ -684,7 +858,16 @@ export default function AdminDashboardPage() {
                       <div key={product.id} className="admin-product-mobile-card">
                         <div className="d-flex align-items-start gap-3">
                           <div className="admin-product-thumb-lg">
-                            <Image src={product.image} alt={product.name} fill className="object-fit-contain p-1" />
+                            <Image
+                              src={product.image}
+                              alt={product.name}
+                              fill
+                              unoptimized
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = '/images/carrots.png';
+                              }}
+                              className="object-fit-contain p-1"
+                            />
                           </div>
                           <div className="flex-grow-1 min-w-0">
                             <div className="d-flex align-items-start justify-content-between gap-2">

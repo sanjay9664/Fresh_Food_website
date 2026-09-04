@@ -3,7 +3,9 @@
  * Handles HTTP requests, JWT token injection, base URL, and error parsing.
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
+// Keep the versioned API base in one place. Override it per environment with
+// NEXT_PUBLIC_API_URL (for example: https://api.freshvana.com/api/v1).
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1').replace(/\/$/, '');
 
 // Token Storage Keys
 const ACCESS_TOKEN_KEY = 'freshvana_access_token';
@@ -142,7 +144,7 @@ export const authApi = {
       phone?: string;
       role: string;
       status: string;
-    }>('/auth/me', {
+    }>('/users/me', {
       method: 'GET',
       requiresAuth: true,
     }),
@@ -152,6 +154,46 @@ export const authApi = {
       method: 'POST',
       body: JSON.stringify({ refreshToken }),
     }),
+
+  refresh: (refreshToken: string) =>
+    apiRequest<{ accessToken: string; refreshToken: string }>('/auth/refresh', {
+      method: 'POST',
+      body: JSON.stringify({ refreshToken }),
+    }),
+};
+
+// =============================================================================
+// CATALOG API ENDPOINTS
+// =============================================================================
+
+export interface CatalogQuery {
+  categoryId?: string;
+  status?: string;
+  search?: string;
+}
+
+const toQueryString = (query: CatalogQuery) => {
+  const params = new URLSearchParams();
+  Object.entries(query).forEach(([key, value]) => value && params.set(key, value));
+  const queryString = params.toString();
+  return queryString ? `?${queryString}` : '';
+};
+
+export const catalogApi = {
+  getProducts: (query: CatalogQuery = {}) =>
+    apiRequest<unknown[]>(`/catalog/products${toQueryString(query)}`, { method: 'GET', requiresAuth: true }),
+  getCategories: () =>
+    apiRequest<unknown[]>('/catalog/categories', { method: 'GET', requiresAuth: true }),
+  createProduct: (payload: unknown) =>
+    apiRequest<unknown>('/catalog/products', { method: 'POST', body: JSON.stringify(payload), requiresAuth: true }),
+  updateProduct: (id: string, payload: unknown) =>
+    apiRequest<unknown>(`/catalog/products/${id}`, { method: 'PUT', body: JSON.stringify(payload), requiresAuth: true }),
+  deleteProduct: (id: string) =>
+    apiRequest(`/catalog/products/${id}`, { method: 'DELETE', requiresAuth: true }),
+  createCategory: (payload: unknown) =>
+    apiRequest<unknown>('/catalog/categories', { method: 'POST', body: JSON.stringify(payload), requiresAuth: true }),
+  deleteCategory: (id: string) =>
+    apiRequest(`/catalog/categories/${id}`, { method: 'DELETE', requiresAuth: true }),
 };
 
 // =============================================================================
@@ -191,4 +233,3 @@ export const cartApi = {
       requiresAuth: true,
     }),
 };
-

@@ -20,9 +20,25 @@ import {
   Image as ImageIcon,
   Tag,
   Clock,
-  Truck
+  Truck,
+  Bell,
+  Settings,
+  TrendingUp,
+  Activity,
+  ChevronRight,
+  Search,
+  Filter,
+  Download,
+  BarChart3,
+  Users,
+  Leaf,
+  EyeOff,
+  Store,
+  Globe,
+  AlertCircle,
+  X
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function AdminDashboardPage() {
   const {
@@ -44,6 +60,7 @@ export default function AdminDashboardPage() {
   const [notificationDraft, setNotificationDraft] = useState({ title: '', message: '', audience: 'All customers' });
   const [notificationSuccess, setNotificationSuccess] = useState(false);
   const [orderFilter, setOrderFilter] = useState<'All' | 'Pending' | 'Out for Delivery' | 'Delivered'>('All');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Frontend-only demo data. API data will replace this only when backend integration is requested.
   const orders = [
@@ -193,185 +210,205 @@ export default function AdminDashboardPage() {
     setNewCategory({ name: '', slug: '', description: '', image: '/images/carrots.png', icon: 'Leaf' });
   };
 
+  const filteredProducts = searchQuery
+    ? allProducts.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.category.toLowerCase().includes(searchQuery.toLowerCase()))
+    : allProducts;
+
+  const sidebarItems = [
+    { id: 'products', label: 'Products & Inventory', icon: Package, badge: allProducts.length },
+    { id: 'categories', label: 'Categories', icon: Layers, badge: categories.length },
+    { id: 'orders', label: 'Orders', icon: ShoppingBag, badge: pendingOrders },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
+    { id: 'system', label: 'System', icon: Settings }
+  ];
+
   return (
-    <div className="py-5 bg-cream" style={{ paddingTop: '180px', minHeight: '85vh' }}>
-      <aside className="admin-sidebar d-none d-xl-flex flex-column bg-white border-end shadow-sm">
-        <div className="px-4 pt-4 pb-3 border-bottom">
-          <div className="d-flex align-items-center gap-2 text-success fw-bold small mb-2"><ShieldAlert size={18} /> WORKSPACE</div>
-          <h5 className="font-heading fw-bold mb-1">Super Admin</h5>
-          <p className="small text-muted mb-0">Frontend control center</p>
+    <div className="admin-shell">
+      {/* Premium Dark Sidebar */}
+      <aside className="admin-sidebar-v2 d-none d-xl-flex flex-column">
+        {/* Sidebar Brand */}
+        <div className="admin-sidebar-brand">
+          <div className="d-flex align-items-center gap-3">
+            <div className="admin-brand-icon">
+              <Leaf size={20} />
+            </div>
+            <div>
+              <h6 className="mb-0 text-white fw-bold" style={{ fontSize: '1.05rem' }}>
+                Fresh<span style={{ color: '#4ADE80' }}>Vana</span>
+              </h6>
+              <span className="d-block" style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.5px' }}>
+                ADMIN DASHBOARD
+              </span>
+            </div>
+          </div>
         </div>
-        <nav className="p-3 d-flex flex-column gap-1 flex-grow-1">
-          {[
-            { id: 'products', label: 'Products & Inventory', icon: Package },
-            { id: 'categories', label: 'Categories', icon: Layers },
-            { id: 'orders', label: 'Orders', icon: ShoppingBag },
-            { id: 'notifications', label: 'Send Notifications', icon: Truck },
-            { id: 'system', label: 'System Management', icon: ShieldAlert }
-          ].map((item) => {
+
+        {/* Sidebar Nav Items */}
+        <nav className="admin-sidebar-nav">
+          <span className="admin-sidebar-label">MAIN MENU</span>
+          {sidebarItems.map((item) => {
             const Icon = item.icon;
-            return <button key={item.id} onClick={() => setActiveTab(item.id as typeof activeTab)} className={`btn text-start rounded-3 px-3 py-2 fw-semibold d-flex align-items-center gap-2 ${activeTab === item.id ? 'btn-success text-white' : 'btn-light text-dark border-0'}`} style={activeTab === item.id ? { background: '#0A6836' } : {}}><Icon size={17} />{item.label}</button>;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id as typeof activeTab)}
+                className={`admin-sidebar-item ${isActive ? 'active' : ''}`}
+              >
+                <div className="d-flex align-items-center gap-3">
+                  <div className={`admin-sidebar-icon ${isActive ? 'active' : ''}`}>
+                    <Icon size={18} />
+                  </div>
+                  <span>{item.label}</span>
+                </div>
+                {item.badge !== undefined && item.badge > 0 && (
+                  <span className={`admin-sidebar-badge ${isActive ? 'active' : ''}`}>
+                    {item.badge}
+                  </span>
+                )}
+              </button>
+            );
           })}
         </nav>
-        <div className="p-3 border-top">
-          <Link href="/" className="btn btn-outline-success w-100 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2"><Eye size={16} />View storefront</Link>
+
+        {/* Sidebar Footer */}
+        <div className="admin-sidebar-footer">
+          <Link href="/" className="admin-sidebar-storefront-btn">
+            <Globe size={16} />
+            <span>View Storefront</span>
+            <ChevronRight size={14} className="ms-auto" />
+          </Link>
         </div>
       </aside>
 
-      <div className="container py-3 admin-main-container">
-        {/* Top Header Navigation */}
-        <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4 pb-3 border-bottom">
-          <div>
-            <div className="d-flex align-items-center gap-2 text-success fw-bold small mb-1">
-              <ShieldAlert size={18} />
-              <span>SUPER ADMIN CONTROL PANEL</span>
+      {/* Main Content */}
+      <div className="admin-content-area">
+        {/* Top Header Bar */}
+        <header className="admin-topbar">
+          <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+            <div>
+              <div className="d-flex align-items-center gap-2 mb-1">
+                <div className="admin-topbar-indicator" />
+                <span className="admin-topbar-label">SUPER ADMIN CONTROL PANEL</span>
+              </div>
+              <h1 className="admin-topbar-title">
+                {activeTab === 'products' && 'Products & Inventory'}
+                {activeTab === 'categories' && 'Category Management'}
+                {activeTab === 'orders' && 'Order Management'}
+                {activeTab === 'notifications' && 'Notifications'}
+                {activeTab === 'system' && 'System Management'}
+              </h1>
+              <p className="admin-topbar-subtitle mb-0">
+                {activeTab === 'products' && 'Upload produce, manage stock & control your live storefront inventory.'}
+                {activeTab === 'categories' && 'Organize your product categories for seamless navigation.'}
+                {activeTab === 'orders' && 'Track customer orders and delivery status in real-time.'}
+                {activeTab === 'notifications' && 'Send announcements and updates to your customers.'}
+                {activeTab === 'system' && 'System configuration, access management and diagnostics.'}
+              </p>
             </div>
-            <h2 className="font-heading display-6 fw-extrabold text-dark mb-0">
-              Produce, Category & Store Control
-            </h2>
-            <p className="text-muted small mb-0">
-              Upload new produce, add categories, manage stock & inspect live storefront inventory.
-            </p>
+
+            <div className="d-flex align-items-center gap-2 flex-shrink-0">
+              <button
+                onClick={resetToDefaults}
+                className="admin-btn-outline-danger"
+              >
+                <RotateCcw size={14} />
+                <span className="d-none d-sm-inline">Reset</span>
+              </button>
+
+              <Link href="/" className="admin-btn-primary">
+                <Eye size={15} />
+                <span>Live Store</span>
+              </Link>
+            </div>
           </div>
+        </header>
 
-          <div className="d-flex align-items-center gap-2 mt-3 mt-md-0">
-            <button
-              onClick={resetToDefaults}
-              className="btn btn-outline-danger btn-sm rounded-pill px-3 py-2 fw-semibold d-flex align-items-center gap-1"
-            >
-              <RotateCcw size={14} />
-              <span>Reset Inventory</span>
-            </button>
-
-            <Link
-              href="/"
-              className="btn btn-success btn-sm rounded-pill px-4 py-2 fw-bold d-flex align-items-center gap-2 shadow-sm"
-              style={{ background: '#0A6836', border: 'none' }}
-            >
-              <Eye size={16} />
-              <span>View Live Website</span>
-            </Link>
+        {/* Mobile Tab Switcher */}
+        <div className="admin-mobile-tabs d-xl-none">
+          <div className="d-flex align-items-center gap-2 overflow-auto scrollbar-none py-1 px-1">
+            {sidebarItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id as typeof activeTab)}
+                  className={`admin-mobile-tab ${isActive ? 'active' : ''}`}
+                >
+                  <Icon size={15} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* Metrics Counter Row */}
+        {/* Stat Cards */}
         <div className="row g-3 mb-4">
-          <div className="col-6 col-md-3">
-            <div className="bg-white rounded-4 p-4 shadow-sm border d-flex align-items-center gap-3">
-              <div className="p-3 rounded-circle bg-success bg-opacity-10 text-success">
-                <Package size={24} />
+          {[
+            { label: 'Live Produce', value: products.length, icon: Package, gradient: 'stat-green', change: '+3 today' },
+            { label: 'Categories', value: categories.length, icon: Layers, gradient: 'stat-amber', change: 'Active' },
+            { label: 'Total Orders', value: orders.length, icon: ShoppingBag, gradient: 'stat-blue', change: `${pendingOrders} pending` },
+            { label: 'Revenue', value: `₹${totalRevenue.toLocaleString('en-IN')}`, icon: TrendingUp, gradient: 'stat-emerald', change: '+12% this week' }
+          ].map((stat, i) => {
+            const Icon = stat.icon;
+            return (
+              <div className="col-6 col-lg-3" key={i}>
+                <div className={`admin-stat-card ${stat.gradient}`}>
+                  <div className="admin-stat-icon-wrap">
+                    <Icon size={22} />
+                  </div>
+                  <div className="admin-stat-info">
+                    <h3 className="admin-stat-value">{stat.value}</h3>
+                    <span className="admin-stat-label">{stat.label}</span>
+                  </div>
+                  <span className="admin-stat-change">{stat.change}</span>
+                </div>
               </div>
-              <div>
-                <h3 className="font-heading fw-extrabold text-dark mb-0">{products.length}</h3>
-                <span className="text-muted small">Live Produce</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-6 col-md-3">
-            <div className="bg-white rounded-4 p-4 shadow-sm border d-flex align-items-center gap-3">
-              <div className="p-3 rounded-circle bg-warning bg-opacity-10 text-warning">
-                <Layers size={24} />
-              </div>
-              <div>
-                <h3 className="font-heading fw-extrabold text-dark mb-0">{categories.length}</h3>
-                <span className="text-muted small">Active Categories</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-6 col-md-3">
-            <div className="bg-white rounded-4 p-4 shadow-sm border d-flex align-items-center gap-3">
-              <div className="p-3 rounded-circle bg-primary bg-opacity-10 text-primary">
-                <ShoppingBag size={24} />
-              </div>
-              <div>
-                <h3 className="font-heading fw-extrabold text-dark mb-0">{orders.length}</h3>
-                <span className="text-muted small">Total Orders</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-6 col-md-3">
-            <div className="bg-white rounded-4 p-4 shadow-sm border d-flex align-items-center gap-3">
-              <div className="p-3 rounded-circle bg-success bg-opacity-10 text-success">
-                <Sparkles size={24} />
-              </div>
-              <div>
-                <h3 className="font-heading fw-extrabold text-dark mb-0">₹{totalRevenue.toLocaleString('en-IN')}</h3>
-                <span className="text-muted small">Order Value</span>
-              </div>
-            </div>
-          </div>
+            );
+          })}
         </div>
 
-        {/* Section Tabs Switcher */}
-        <div className="d-flex align-items-center gap-2 mb-4 bg-white p-2 rounded-4 shadow-sm border w-100 overflow-auto d-xl-none">
-          <button
-            onClick={() => setActiveTab('products')}
-            className={`btn rounded-pill px-4 py-2 fw-bold text-nowrap ${
-              activeTab === 'products'
-                ? 'btn-success text-white shadow-sm'
-                : 'btn-light text-dark border-0'
-            }`}
-            style={activeTab === 'products' ? { background: '#0A6836' } : {}}
-          >
-            <Package size={16} className="me-2 d-inline" />
-            Upload Products & Inventory
-          </button>
-
-          <button
-            onClick={() => setActiveTab('categories')}
-            className={`btn rounded-pill px-4 py-2 fw-bold text-nowrap ${
-              activeTab === 'categories'
-                ? 'btn-success text-white shadow-sm'
-                : 'btn-light text-dark border-0'
-            }`}
-            style={activeTab === 'categories' ? { background: '#0A6836' } : {}}
-          >
-            <Layers size={16} className="me-2 d-inline" />
-            Manage Categories
-          </button>
-
-          <button
-            onClick={() => setActiveTab('orders')}
-            className={`btn rounded-pill px-4 py-2 fw-bold text-nowrap ${
-              activeTab === 'orders'
-                ? 'btn-success text-white shadow-sm'
-                : 'btn-light text-dark border-0'
-            }`}
-            style={activeTab === 'orders' ? { background: '#0A6836' } : {}}
-          >
-            <ShoppingBag size={16} className="me-2 d-inline" />
-            Customer Orders Log
-          </button>
-        </div>
-
-        {/* TAB 1: PRODUCT UPLOAD & INVENTORY */}
+        {/* ============================================================= */}
+        {/* TAB 1: PRODUCT UPLOAD & INVENTORY                             */}
+        {/* ============================================================= */}
         {activeTab === 'products' && (
           <div className="row g-4">
-            {/* Left Form: Add New Product */}
+            {/* Left: Upload Form */}
             <div className="col-lg-4 col-xl-3">
-              <div className="bg-white rounded-5 p-4 p-md-5 shadow-sm border">
-                <h4 className="font-heading fw-bold text-dark mb-3 d-flex align-items-center gap-2">
-                  <Plus size={20} className="text-success" />
-                  <span>Upload New Fruit / Veggie</span>
-                </h4>
-
-                {productSuccess && (
-                  <div className="alert alert-success rounded-4 d-flex align-items-center gap-2 small fw-bold mb-4">
-                    <CheckCircle2 size={18} />
-                    <span>Product uploaded successfully! Now live on website UI.</span>
+              <div className="admin-card">
+                <div className="admin-card-header">
+                  <div className="admin-card-icon-sm green">
+                    <Plus size={16} />
                   </div>
-                )}
+                  <div>
+                    <h5 className="admin-card-title mb-0">Add Produce</h5>
+                    <span className="admin-card-desc">Upload to live store</span>
+                  </div>
+                </div>
+
+                <AnimatePresence>
+                  {productSuccess && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="admin-success-banner"
+                    >
+                      <CheckCircle2 size={16} />
+                      <span>Product published successfully!</span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 <form onSubmit={handleProductSubmit}>
-                  <div className="d-flex flex-column gap-3 mb-4">
-                    <div>
-                      <label className="form-label fw-bold text-dark small mb-1">Produce Name</label>
+                  <div className="d-flex flex-column gap-3">
+                    <div className="admin-form-group">
+                      <label className="admin-form-label">Produce Name</label>
                       <input
                         type="text"
-                        className="form-control rounded-3 py-2 px-3 small border"
+                        className="admin-form-input"
                         placeholder="e.g. Organic Fresh Dragonfruit"
                         value={newProduct.name}
                         onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
@@ -379,10 +416,10 @@ export default function AdminDashboardPage() {
                       />
                     </div>
 
-                    <div>
-                      <label className="form-label fw-bold text-dark small mb-1">Category</label>
+                    <div className="admin-form-group">
+                      <label className="admin-form-label">Category</label>
                       <select
-                        className="form-select rounded-3 py-2 px-3 small border"
+                        className="admin-form-select"
                         value={newProduct.categoryId}
                         onChange={(e) => {
                           const sel = categories.find((c) => c.id === e.target.value);
@@ -394,238 +431,242 @@ export default function AdminDashboardPage() {
                         }}
                       >
                         {categories.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                          </option>
+                          <option key={c.id} value={c.id}>{c.name}</option>
                         ))}
                       </select>
                     </div>
 
                     <div className="row g-2">
                       <div className="col-6">
-                        <label className="form-label fw-bold text-dark small mb-1">Sale Price (₹)</label>
-                        <input
-                          type="number"
-                          className="form-control rounded-3 py-2 px-3 small border"
-                          value={newProduct.price}
-                          onChange={(e) => setNewProduct({ ...newProduct, price: Number(e.target.value) })}
-                          required
-                        />
+                        <div className="admin-form-group">
+                          <label className="admin-form-label">Sale Price (₹)</label>
+                          <input
+                            type="number"
+                            className="admin-form-input"
+                            value={newProduct.price}
+                            onChange={(e) => setNewProduct({ ...newProduct, price: Number(e.target.value) })}
+                            required
+                          />
+                        </div>
                       </div>
-
                       <div className="col-6">
-                        <label className="form-label fw-bold text-dark small mb-1">Original Price (₹)</label>
-                        <input
-                          type="number"
-                          className="form-control rounded-3 py-2 px-3 small border"
-                          value={newProduct.originalPrice}
-                          onChange={(e) => setNewProduct({ ...newProduct, originalPrice: Number(e.target.value) })}
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    {/* Image Mode Selector */}
-                    <div>
-                      <label className="form-label fw-bold text-dark small mb-1">Product Image Source</label>
-                      <div className="d-flex gap-2 mb-2">
-                        <button
-                          type="button"
-                          onClick={() => setImageMode('preset')}
-                          className={`btn btn-xs rounded-pill px-3 py-1 fw-bold ${
-                            imageMode === 'preset' ? 'btn-success text-white' : 'btn-light text-muted border'
-                          }`}
-                        >
-                          Select Studio Cutout
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setImageMode('custom')}
-                          className={`btn btn-xs rounded-pill px-3 py-1 fw-bold ${
-                            imageMode === 'custom' ? 'btn-success text-white' : 'btn-light text-muted border'
-                          }`}
-                        >
-                          Custom Image URL
-                        </button>
-                      </div>
-
-                      {imageMode === 'preset' ? (
-                        <select
-                          className="form-select rounded-3 py-2 px-3 small border"
-                          value={newProduct.image}
-                          onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })}
-                        >
-                          {availablePresetImages.map((img) => (
-                            <option key={img.path} value={img.path}>
-                              {img.label}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <input
-                          type="text"
-                          className="form-control rounded-3 py-2 px-3 small border"
-                          placeholder="Paste image URL (e.g. https://...)"
-                          value={newProduct.image}
-                          onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })}
-                        />
-                      )}
-
-                      {/* Live Image Preview Card */}
-                      <div className="mt-3 p-3 bg-light rounded-4 text-center border">
-                        <span className="text-muted small fw-bold d-block mb-2">LIVE IMAGE PREVIEW</span>
-                        <div className="position-relative mx-auto bg-white rounded-3 p-2 shadow-sm" style={{ width: '90px', height: '90px' }}>
-                          <Image
-                            src={newProduct.image || '/images/carrots.png'}
-                            alt="Preview"
-                            fill
-                            className="object-fit-contain p-1"
+                        <div className="admin-form-group">
+                          <label className="admin-form-label">MRP (₹)</label>
+                          <input
+                            type="number"
+                            className="admin-form-input"
+                            value={newProduct.originalPrice}
+                            onChange={(e) => setNewProduct({ ...newProduct, originalPrice: Number(e.target.value) })}
+                            required
                           />
                         </div>
                       </div>
                     </div>
 
-                    <div>
-                      <label className="form-label fw-bold text-dark small mb-1">Select Badge</label>
+                    {/* Image Source */}
+                    <div className="admin-form-group">
+                      <label className="admin-form-label">Product Image</label>
+                      <div className="admin-toggle-group">
+                        <button
+                          type="button"
+                          onClick={() => setImageMode('preset')}
+                          className={`admin-toggle-btn ${imageMode === 'preset' ? 'active' : ''}`}
+                        >
+                          <ImageIcon size={13} />
+                          Studio Cutout
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setImageMode('custom')}
+                          className={`admin-toggle-btn ${imageMode === 'custom' ? 'active' : ''}`}
+                        >
+                          <Globe size={13} />
+                          Custom URL
+                        </button>
+                      </div>
+
+                      {imageMode === 'preset' ? (
+                        <select
+                          className="admin-form-select mt-2"
+                          value={newProduct.image}
+                          onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })}
+                        >
+                          {availablePresetImages.map((img) => (
+                            <option key={img.path} value={img.path}>{img.label}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          className="admin-form-input mt-2"
+                          placeholder="https://example.com/image.png"
+                          value={newProduct.image}
+                          onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })}
+                        />
+                      )}
+
+                      {/* Image Preview */}
+                      <div className="admin-image-preview mt-3">
+                        <div className="position-relative mx-auto" style={{ width: '80px', height: '80px' }}>
+                          <Image
+                            src={newProduct.image || '/images/carrots.png'}
+                            alt="Preview"
+                            fill
+                            className="object-fit-contain"
+                          />
+                        </div>
+                        <span className="admin-image-preview-label">LIVE PREVIEW</span>
+                      </div>
+                    </div>
+
+                    <div className="admin-form-group">
+                      <label className="admin-form-label">Badge</label>
                       <select
-                        className="form-select rounded-3 py-2 px-3 small border"
+                        className="admin-form-select"
                         value={newProduct.badge}
                         onChange={(e) =>
                           setNewProduct({ ...newProduct, badge: e.target.value as Product['badge'] })
                         }
                       >
-                        <option value="Organic">Organic</option>
-                        <option value="Farm Fresh">Farm Fresh</option>
-                        <option value="Exotic">Exotic</option>
-                        <option value="Best Seller">Best Seller</option>
-                        <option value="Limited Deal">Limited Deal</option>
+                        <option value="Organic">🌿 Organic</option>
+                        <option value="Farm Fresh">🌾 Farm Fresh</option>
+                        <option value="Exotic">✨ Exotic</option>
+                        <option value="Best Seller">🔥 Best Seller</option>
+                        <option value="Limited Deal">⏳ Limited Deal</option>
                       </select>
                     </div>
 
-                    <div>
-                      <label className="form-label fw-bold text-dark small mb-1">Description</label>
+                    <div className="admin-form-group">
+                      <label className="admin-form-label">Description</label>
                       <textarea
                         rows={2}
-                        className="form-control rounded-3 py-2 px-3 small border"
+                        className="admin-form-textarea"
                         value={newProduct.description}
                         onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
                       />
                     </div>
                   </div>
 
-                  <button
-                    type="submit"
-                    className="btn btn-success btn-lg rounded-pill w-100 py-3 fw-bold shadow border-0"
-                    style={{ background: '#0A6836' }}
-                  >
-                    Publish Produce Live to Website →
+                  <button type="submit" className="admin-btn-submit mt-4">
+                    <Plus size={18} />
+                    <span>Publish to Store</span>
                   </button>
                 </form>
               </div>
             </div>
 
-            {/* Right: Live Inventory Table & Super Admin Control */}
+            {/* Right: Inventory Table */}
             <div className="col-lg-8 col-xl-9">
-              <div className="bg-white rounded-5 p-4 shadow-sm border">
-                <div className="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+              <div className="admin-card">
+                <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
                   <div>
-                    <h4 className="font-heading fw-bold text-dark mb-0">
-                      Super Admin Inventory Control
-                    </h4>
-                    <span className="text-muted small">
-                      {products.length} Active in Store • {allProducts.length - products.length} Hidden from Customers
+                    <h5 className="admin-card-title mb-1">Inventory Control</h5>
+                    <span className="admin-card-desc">
+                      {products.length} live · {allProducts.length - products.length} hidden · {allProducts.length} total
                     </span>
                   </div>
 
-                  <span className="badge bg-success bg-opacity-10 text-success fw-bold px-3 py-2">
-                    {allProducts.length} Total Master Produce
-                  </span>
+                  <div className="d-flex align-items-center gap-2">
+                    {/* Search Bar */}
+                    <div className="admin-search-box">
+                      <Search size={15} className="admin-search-icon" />
+                      <input
+                        type="text"
+                        placeholder="Search products..."
+                        className="admin-search-input"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
+
+                    <span className="admin-badge-count">
+                      {allProducts.length} Items
+                    </span>
+                  </div>
                 </div>
 
-                <div className="table-responsive d-none d-xl-block" style={{ maxHeight: '580px', overflowY: 'auto' }}>
-                  <table className="table table-hover align-middle admin-inventory-table">
-                    <thead className="table-light small text-muted">
+                {/* Desktop Table */}
+                <div className="table-responsive d-none d-xl-block" style={{ maxHeight: '560px', overflowY: 'auto' }}>
+                  <table className="admin-table">
+                    <thead>
                       <tr>
-                        <th>Fruit / Vegetable</th>
+                        <th>Product</th>
                         <th>Category</th>
                         <th>Price</th>
-                        <th>Super Admin Store Add</th>
+                        <th>Visibility</th>
                         <th>Stock</th>
-                        <th className="text-end admin-action-heading">Actions</th>
+                        <th style={{ width: '100px', textAlign: 'center' }}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {allProducts.map((p) => {
+                      {filteredProducts.map((p) => {
                         const isAddedToStore = p.isAdded !== false;
 
                         return (
-                          <tr key={p.id} className={!isAddedToStore ? 'bg-light bg-opacity-50' : ''}>
+                          <tr key={p.id} className={!isAddedToStore ? 'row-hidden' : ''}>
                             <td>
                               <div className="d-flex align-items-center gap-3">
-                                <div className="position-relative rounded-3 bg-light p-1" style={{ width: '44px', height: '44px' }}>
+                                <div className="admin-product-thumb">
                                   <Image src={p.image} alt={p.name} fill className="object-fit-contain p-1" />
                                 </div>
                                 <div>
-                                  <strong className="d-block text-dark font-heading small">{p.name}</strong>
-                                  <span className="badge bg-secondary bg-opacity-10 text-dark small">{p.badge}</span>
+                                  <strong className="d-block admin-product-name">{p.name}</strong>
+                                  <span className="admin-product-badge">{p.badge}</span>
                                 </div>
                               </div>
                             </td>
 
                             <td>
-                              <span className="small text-muted">{p.category}</span>
+                              <span className="admin-cell-text">{p.category}</span>
                             </td>
 
                             <td>
-                              <strong className="text-success small">₹{p.price}</strong>
-                              <span className="text-muted text-decoration-line-through small ms-1">₹{p.originalPrice}</span>
+                              <div className="d-flex align-items-center gap-1">
+                                <strong className="admin-price-current">₹{p.price}</strong>
+                                <span className="admin-price-original">₹{p.originalPrice}</span>
+                              </div>
                             </td>
 
-                            {/* Super Admin Store Visibility Add Toggle */}
                             <td>
                               <button
                                 type="button"
                                 onClick={() => toggleProductAdded(p.id)}
-                                className={`btn btn-xs rounded-pill px-3 py-1 fw-bold transition-all shadow-sm ${
-                                  isAddedToStore
-                                    ? 'btn-success text-white'
-                                    : 'btn-outline-secondary text-muted'
-                                }`}
-                                style={{ fontSize: '0.72rem' }}
-                                title={isAddedToStore ? 'Click to hide from customer website' : 'Click to add to customer website'}
+                                className={`admin-visibility-btn ${isAddedToStore ? 'live' : 'hidden'}`}
                               >
-                                {isAddedToStore ? '✓ Added to Store' : '+ Add to Store'}
+                                {isAddedToStore ? (
+                                  <><Eye size={13} /> Live</>
+                                ) : (
+                                  <><EyeOff size={13} /> Hidden</>
+                                )}
                               </button>
                             </td>
 
                             <td>
                               <button
                                 onClick={() => toggleStock(p.id)}
-                                className={`btn btn-xs rounded-pill px-2 py-1 fw-bold ${
-                                  p.inStock ? 'btn-success text-white' : 'btn-secondary text-white'
-                                }`}
-                                style={{ fontSize: '0.68rem' }}
+                                className={`admin-stock-btn ${p.inStock ? 'in-stock' : 'out-stock'}`}
                               >
-                                {p.inStock ? 'In Stock' : 'Out of Stock'}
+                                <span className={`admin-stock-dot ${p.inStock ? 'green' : 'red'}`} />
+                                {p.inStock ? 'In Stock' : 'Out'}
                               </button>
                             </td>
 
-                            <td className="text-end admin-action-cell">
-                              <div className="d-flex align-items-center justify-content-end gap-2">
+                            <td>
+                              <div className="d-flex align-items-center justify-content-center gap-2">
                                 <button
-                                onClick={() => setViewingProduct(p)}
-                                className="btn btn-sm btn-light text-success rounded-circle p-2 shadow-sm border"
-                                title="View complete produce details"
-                              >
-                                <Eye size={14} />
-                              </button>
-                              <button
-                                onClick={() => deleteProduct(p.id)}
-                                className="btn btn-sm btn-light text-danger rounded-circle p-2 shadow-sm border"
-                                title="Delete Item"
-                              >
-                                <Trash2 size={14} />
-                              </button>
+                                  onClick={() => setViewingProduct(p)}
+                                  className="admin-action-btn view"
+                                  title="View details"
+                                >
+                                  <Eye size={14} />
+                                </button>
+                                <button
+                                  onClick={() => deleteProduct(p.id)}
+                                  className="admin-action-btn delete"
+                                  title="Delete"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
                               </div>
                             </td>
                           </tr>
@@ -635,26 +676,47 @@ export default function AdminDashboardPage() {
                   </table>
                 </div>
 
+                {/* Mobile Product Cards */}
                 <div className="d-xl-none d-flex flex-column gap-3">
-                  {allProducts.map((product) => {
+                  {filteredProducts.map((product) => {
                     const isLive = product.isAdded !== false;
                     return (
-                      <article key={product.id} className="admin-product-card border rounded-4 p-3">
+                      <div key={product.id} className="admin-product-mobile-card">
                         <div className="d-flex align-items-start gap-3">
-                          <div className="position-relative rounded-3 bg-light flex-shrink-0" style={{ width: '60px', height: '60px' }}>
+                          <div className="admin-product-thumb-lg">
                             <Image src={product.image} alt={product.name} fill className="object-fit-contain p-1" />
                           </div>
                           <div className="flex-grow-1 min-w-0">
-                            <div className="d-flex align-items-start justify-content-between gap-2"><div><strong className="d-block text-dark font-heading">{product.name}</strong><span className="small text-muted">{product.category} · {product.badge}</span></div><strong className="text-success text-nowrap">₹{product.price}</strong></div>
-                            <div className="d-flex flex-wrap gap-2 mt-3">
-                              <button type="button" onClick={() => toggleProductAdded(product.id)} className={`btn btn-sm rounded-pill px-3 fw-bold ${isLive ? 'btn-success' : 'btn-outline-secondary'}`} style={isLive ? { background: '#0A6836' } : {}}>{isLive ? 'Live on Store' : 'Hidden'}</button>
-                              <button onClick={() => toggleStock(product.id)} className={`btn btn-sm rounded-pill px-3 fw-bold ${product.inStock ? 'btn-outline-success' : 'btn-outline-secondary'}`}>{product.inStock ? 'In Stock' : 'Out of Stock'}</button>
-                              <button onClick={() => setViewingProduct(product)} className="btn btn-sm btn-light border text-success rounded-circle" aria-label={`View ${product.name}`}><Eye size={15} /></button>
-                              <button onClick={() => deleteProduct(product.id)} className="btn btn-sm btn-light border text-danger rounded-circle" aria-label={`Delete ${product.name}`}><Trash2 size={15} /></button>
+                            <div className="d-flex align-items-start justify-content-between gap-2">
+                              <div>
+                                <strong className="d-block text-dark font-heading" style={{ fontSize: '0.92rem' }}>{product.name}</strong>
+                                <span className="admin-cell-text">{product.category} · {product.badge}</span>
+                              </div>
+                              <strong className="admin-price-current text-nowrap">₹{product.price}</strong>
+                            </div>
+                            <div className="d-flex flex-wrap align-items-center gap-2 mt-3">
+                              <button
+                                type="button"
+                                onClick={() => toggleProductAdded(product.id)}
+                                className={`admin-visibility-btn ${isLive ? 'live' : 'hidden'}`}
+                              >
+                                {isLive ? <><Eye size={13} /> Live</> : <><EyeOff size={13} /> Hidden</>}
+                              </button>
+                              <button
+                                onClick={() => toggleStock(product.id)}
+                                className={`admin-stock-btn ${product.inStock ? 'in-stock' : 'out-stock'}`}
+                              >
+                                <span className={`admin-stock-dot ${product.inStock ? 'green' : 'red'}`} />
+                                {product.inStock ? 'In Stock' : 'Out'}
+                              </button>
+                              <div className="d-flex gap-1 ms-auto">
+                                <button onClick={() => setViewingProduct(product)} className="admin-action-btn view"><Eye size={14} /></button>
+                                <button onClick={() => deleteProduct(product.id)} className="admin-action-btn delete"><Trash2 size={14} /></button>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </article>
+                      </div>
                     );
                   })}
                 </div>
@@ -663,31 +725,44 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* TAB 2: CATEGORY MANAGEMENT */}
+        {/* ============================================================= */}
+        {/* TAB 2: CATEGORY MANAGEMENT                                    */}
+        {/* ============================================================= */}
         {activeTab === 'categories' && (
           <div className="row g-4">
-            {/* Add New Category Form */}
             <div className="col-lg-5">
-              <div className="bg-white rounded-5 p-4 p-md-5 shadow-sm border">
-                <h4 className="font-heading fw-bold text-dark mb-3 d-flex align-items-center gap-2">
-                  <Layers size={20} className="text-success" />
-                  <span>Add New Category</span>
-                </h4>
-
-                {categorySuccess && (
-                  <div className="alert alert-success rounded-4 d-flex align-items-center gap-2 small fw-bold mb-4">
-                    <CheckCircle2 size={18} />
-                    <span>Category added successfully! Now live on website navigation.</span>
+              <div className="admin-card">
+                <div className="admin-card-header">
+                  <div className="admin-card-icon-sm amber">
+                    <Layers size={16} />
                   </div>
-                )}
+                  <div>
+                    <h5 className="admin-card-title mb-0">New Category</h5>
+                    <span className="admin-card-desc">Add to store navigation</span>
+                  </div>
+                </div>
+
+                <AnimatePresence>
+                  {categorySuccess && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="admin-success-banner"
+                    >
+                      <CheckCircle2 size={16} />
+                      <span>Category created successfully!</span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 <form onSubmit={handleCategorySubmit}>
-                  <div className="d-flex flex-column gap-3 mb-4">
-                    <div>
-                      <label className="form-label fw-bold text-dark small mb-1">Category Name</label>
+                  <div className="d-flex flex-column gap-3">
+                    <div className="admin-form-group">
+                      <label className="admin-form-label">Category Name</label>
                       <input
                         type="text"
-                        className="form-control rounded-3 py-2 px-3 small border"
+                        className="admin-form-input"
                         placeholder="e.g. Exotic Berries & Melons"
                         value={newCategory.name}
                         onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
@@ -695,24 +770,20 @@ export default function AdminDashboardPage() {
                       />
                     </div>
 
-                    <div>
-                      <label className="form-label fw-bold text-dark small mb-1">Category Image Source</label>
+                    <div className="admin-form-group">
+                      <label className="admin-form-label">Category Image</label>
                       <select
-                        className="form-select rounded-3 py-2 px-3 small border mb-2"
+                        className="admin-form-select"
                         value={newCategory.image}
                         onChange={(e) => setNewCategory({ ...newCategory, image: e.target.value })}
                       >
                         {availablePresetImages.map((img) => (
-                          <option key={img.path} value={img.path}>
-                            {img.label}
-                          </option>
+                          <option key={img.path} value={img.path}>{img.label}</option>
                         ))}
                       </select>
 
-                      {/* Live Image Preview Card */}
-                      <div className="p-3 bg-light rounded-4 text-center border">
-                        <span className="text-muted small fw-bold d-block mb-2">CATEGORY HALO PREVIEW</span>
-                        <div className="halo-circle halo-bg-1 rounded-circle mx-auto position-relative" style={{ width: '80px', height: '80px' }}>
+                      <div className="admin-image-preview mt-3">
+                        <div className="halo-circle halo-bg-1 rounded-circle mx-auto position-relative" style={{ width: '72px', height: '72px' }}>
                           <Image
                             src={newCategory.image || '/images/carrots.png'}
                             alt="Category Preview"
@@ -720,47 +791,48 @@ export default function AdminDashboardPage() {
                             className="object-fit-cover rounded-circle p-1"
                           />
                         </div>
+                        <span className="admin-image-preview-label">CATEGORY PREVIEW</span>
                       </div>
                     </div>
 
-                    <div>
-                      <label className="form-label fw-bold text-dark small mb-1">Description</label>
+                    <div className="admin-form-group">
+                      <label className="admin-form-label">Description</label>
                       <textarea
                         rows={3}
-                        className="form-control rounded-3 py-2 px-3 small border"
-                        placeholder="Brief summary of this organic category..."
+                        className="admin-form-textarea"
+                        placeholder="Brief summary of this category..."
                         value={newCategory.description}
                         onChange={(e) => setNewCategory({ ...newCategory, description: e.target.value })}
                       />
                     </div>
                   </div>
 
-                  <button
-                    type="submit"
-                    className="btn btn-success btn-lg rounded-pill w-100 py-3 fw-bold shadow border-0"
-                    style={{ background: '#0A6836' }}
-                  >
-                    Add Category to Website →
+                  <button type="submit" className="admin-btn-submit mt-4">
+                    <Plus size={18} />
+                    <span>Add Category</span>
                   </button>
                 </form>
               </div>
             </div>
 
-            {/* Existing Categories Table */}
             <div className="col-lg-7">
-              <div className="bg-white rounded-5 p-4 shadow-sm border">
-                <h4 className="font-heading fw-bold text-dark mb-3">
-                  Live Active Categories ({categories.length})
-                </h4>
+              <div className="admin-card">
+                <div className="d-flex align-items-center justify-content-between mb-4">
+                  <div>
+                    <h5 className="admin-card-title mb-1">Active Categories</h5>
+                    <span className="admin-card-desc">{categories.length} categories in store</span>
+                  </div>
+                  <span className="admin-badge-count">{categories.length}</span>
+                </div>
 
                 <div className="table-responsive">
-                  <table className="table table-hover align-middle">
-                    <thead className="table-light small text-muted">
+                  <table className="admin-table">
+                    <thead>
                       <tr>
                         <th>Category</th>
                         <th>Description</th>
-                        <th>Items Count</th>
-                        <th className="text-end">Action</th>
+                        <th>Products</th>
+                        <th style={{ width: '80px', textAlign: 'center' }}>Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -768,26 +840,28 @@ export default function AdminDashboardPage() {
                         <tr key={c.id}>
                           <td>
                             <div className="d-flex align-items-center gap-3">
-                              <div className="halo-circle halo-bg-2 rounded-circle position-relative flex-shrink-0" style={{ width: '42px', height: '42px' }}>
+                              <div className="halo-circle halo-bg-2 rounded-circle position-relative flex-shrink-0" style={{ width: '40px', height: '40px' }}>
                                 <Image src={c.image} alt={c.name} fill className="object-fit-cover rounded-circle p-1" />
                               </div>
-                              <strong className="text-dark font-heading small">{c.name}</strong>
+                              <strong className="admin-product-name">{c.name}</strong>
                             </div>
                           </td>
                           <td>
-                            <span className="small text-muted text-truncate d-block" style={{ maxWidth: '200px' }}>{c.description}</span>
+                            <span className="admin-cell-text text-truncate d-block" style={{ maxWidth: '200px' }}>{c.description}</span>
                           </td>
                           <td>
-                            <span className="badge bg-success bg-opacity-10 text-success fw-bold">{c.productCount} Items</span>
+                            <span className="admin-badge-count small">{c.productCount} items</span>
                           </td>
-                          <td className="text-end">
-                            <button
-                              onClick={() => deleteCategory(c.id)}
-                              className="btn btn-sm btn-light text-danger rounded-circle p-2 border"
-                              title="Delete Category"
-                            >
-                              <Trash2 size={14} />
-                            </button>
+                          <td>
+                            <div className="d-flex justify-content-center">
+                              <button
+                                onClick={() => deleteCategory(c.id)}
+                                className="admin-action-btn delete"
+                                title="Delete Category"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -799,147 +873,316 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* TAB 3: CUSTOMER ORDERS */}
+        {/* ============================================================= */}
+        {/* TAB 3: CUSTOMER ORDERS                                        */}
+        {/* ============================================================= */}
         {activeTab === 'orders' && (
-          <div className="bg-white rounded-5 p-4 shadow-sm border">
+          <div className="admin-card">
             <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
               <div>
-                <div className="d-flex align-items-center gap-2 text-success small fw-bold mb-1"><ShoppingBag size={17} /> ORDER MANAGEMENT</div>
-                <h4 className="font-heading fw-bold text-dark mb-1">Customer orders & delivery status</h4>
-                <p className="small text-muted mb-0">See every customer, their items, delivery slot and order progress.</p>
+                <h5 className="admin-card-title mb-1">Customer Orders</h5>
+                <span className="admin-card-desc">Track orders, delivery slots and progress.</span>
               </div>
               <div className="d-flex gap-2 flex-wrap">
-                {(['All', 'Pending', 'Out for Delivery', 'Delivered'] as const).map((filter) => <button key={filter} onClick={() => setOrderFilter(filter)} className={`btn btn-sm rounded-pill px-3 fw-bold ${orderFilter === filter ? 'btn-success' : 'btn-light border'}`} style={orderFilter === filter ? { background: '#0A6836' } : {}}>{filter === 'All' ? `All (${orders.length})` : filter}</button>)}
+                {(['All', 'Pending', 'Out for Delivery', 'Delivered'] as const).map((filter) => (
+                  <button
+                    key={filter}
+                    onClick={() => setOrderFilter(filter)}
+                    className={`admin-filter-btn ${orderFilter === filter ? 'active' : ''}`}
+                  >
+                    {filter === 'All' ? `All (${orders.length})` : filter}
+                  </button>
+                ))}
               </div>
             </div>
 
+            {/* Order Stats Mini */}
             <div className="row g-3 mb-4">
-              <div className="col-6 col-lg-3"><div className="admin-order-stat bg-light rounded-4 p-3 h-100"><span className="small text-muted d-block">Total orders</span><strong className="fs-3">{orders.length}</strong></div></div>
-              <div className="col-6 col-lg-3"><div className="admin-order-stat bg-warning bg-opacity-10 rounded-4 p-3 h-100"><span className="small text-muted d-block">Pending action</span><strong className="fs-3 text-warning">{pendingOrders}</strong></div></div>
-              <div className="col-6 col-lg-3"><div className="admin-order-stat bg-primary bg-opacity-10 rounded-4 p-3 h-100"><span className="small text-muted d-block">Out for delivery</span><strong className="fs-3 text-primary">{deliveryOrders}</strong></div></div>
-              <div className="col-6 col-lg-3"><div className="admin-order-stat bg-success bg-opacity-10 rounded-4 p-3 h-100"><span className="small text-muted d-block">Delivered</span><strong className="fs-3 text-success">{deliveredOrders}</strong></div></div>
+              {[
+                { label: 'Total Orders', value: orders.length, color: '#64748B', bg: '#F1F5F9' },
+                { label: 'Pending', value: pendingOrders, color: '#D97706', bg: '#FFFBEB' },
+                { label: 'In Transit', value: deliveryOrders, color: '#2563EB', bg: '#EFF6FF' },
+                { label: 'Delivered', value: deliveredOrders, color: '#059669', bg: '#ECFDF5' }
+              ].map((s, i) => (
+                <div className="col-6 col-lg-3" key={i}>
+                  <div className="admin-order-mini-stat" style={{ background: s.bg }}>
+                    <span className="admin-order-mini-label">{s.label}</span>
+                    <strong className="admin-order-mini-value" style={{ color: s.color }}>{s.value}</strong>
+                  </div>
+                </div>
+              ))}
             </div>
 
+            {/* Order Cards */}
             <div className="row g-3 mb-4">
-              {visibleOrders.map((order) => <div className="col-12 col-xl-6" key={order.id}><div className="border rounded-4 p-3 h-100 admin-order-card"><div className="d-flex justify-content-between gap-3"><div><strong className="font-heading">{order.name}</strong><span className="d-block small text-muted">{order.phone} · {order.id}</span></div><span className={`badge align-self-start rounded-pill px-3 py-2 ${order.status === 'Delivered' ? 'bg-success' : order.status === 'Out for Delivery' ? 'bg-primary' : 'bg-warning text-dark'}`}>{order.status}</span></div><p className="small text-dark mb-1 mt-3">{order.items}</p><div className="d-flex justify-content-between gap-2 small text-muted"><span>{order.count} items · {order.slot}</span><strong className="text-success">₹{order.total}</strong></div><small className="text-muted d-block mt-2">Ordered {order.date}</small></div></div>)}
+              {visibleOrders.map((order) => (
+                <div className="col-12 col-xl-6" key={order.id}>
+                  <div className="admin-order-card">
+                    <div className="d-flex justify-content-between align-items-start gap-3">
+                      <div>
+                        <strong className="font-heading d-block" style={{ fontSize: '0.95rem' }}>{order.name}</strong>
+                        <span className="admin-cell-text">{order.phone} · {order.id}</span>
+                      </div>
+                      <span className={`admin-order-status ${order.status === 'Delivered' ? 'delivered' : order.status === 'Out for Delivery' ? 'transit' : 'pending'}`}>
+                        {order.status}
+                      </span>
+                    </div>
+                    <p className="mb-1 mt-3" style={{ fontSize: '0.85rem', color: '#374151' }}>{order.items}</p>
+                    <div className="d-flex justify-content-between align-items-center mt-2">
+                      <span className="admin-cell-text">{order.count} items · {order.slot}</span>
+                      <strong className="admin-price-current">₹{order.total}</strong>
+                    </div>
+                    <div className="mt-2 pt-2" style={{ borderTop: '1px solid #F3F4F6' }}>
+                      <small className="admin-cell-text">Ordered {order.date}</small>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
 
-            <h5 className="font-heading fw-bold text-dark mb-3">Recent orders table</h5>
-
-            <div className="table-responsive">
-              <table className="table table-hover align-middle">
-                <thead className="table-light small text-muted">
-                  <tr>
-                    <th>Order ID</th>
-                    <th>Customer Name</th>
-                    <th>Delivery Slot</th>
-                    <th>Items</th>
-                    <th>Total Amount</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    { id: 'ORD-9841', name: 'Sanjay Kumar', slot: 'Morning (7am - 10am)', items: 'Carrot 1kg, Apple 500g', total: '₹185', status: 'Out for Delivery' },
-                    { id: 'ORD-9840', name: 'Priya Sharma', slot: 'Afternoon (12pm - 3pm)', items: 'Spinach 500g, Tomato 1kg', total: '₹110', status: 'Processing' },
-                    { id: 'ORD-9839', name: 'Vikram Mehta', slot: 'Evening (5pm - 8pm)', items: 'Broccoli 500g, Avocado 250g', total: '₹260', status: 'Delivered' }
-                  ].map((ord) => (
-                    <tr key={ord.id}>
-                      <td><strong className="text-dark font-heading small">{ord.id}</strong></td>
-                      <td><span className="small font-heading fw-semibold">{ord.name}</span></td>
-                      <td><span className="small text-muted">{ord.slot}</span></td>
-                      <td><span className="small text-muted">{ord.items}</span></td>
-                      <td><strong className="text-success small">{ord.total}</strong></td>
-                      <td>
-                        <span className={`badge ${
-                          ord.status === 'Delivered' ? 'bg-success' : ord.status === 'Out for Delivery' ? 'bg-warning text-dark' : 'bg-primary'
-                        } rounded-pill px-3 py-1 small`}>
-                          {ord.status}
-                        </span>
-                      </td>
+            {/* Orders Table */}
+            <div className="mt-2">
+              <h6 className="font-heading fw-bold text-dark mb-3">Recent Orders Overview</h6>
+              <div className="table-responsive">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Order ID</th>
+                      <th>Customer</th>
+                      <th>Delivery Slot</th>
+                      <th>Items</th>
+                      <th>Amount</th>
+                      <th>Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {[
+                      { id: 'ORD-9841', name: 'Sanjay Kumar', slot: 'Morning (7am - 10am)', items: 'Carrot 1kg, Apple 500g', total: '₹185', status: 'Out for Delivery' },
+                      { id: 'ORD-9840', name: 'Priya Sharma', slot: 'Afternoon (12pm - 3pm)', items: 'Spinach 500g, Tomato 1kg', total: '₹110', status: 'Processing' },
+                      { id: 'ORD-9839', name: 'Vikram Mehta', slot: 'Evening (5pm - 8pm)', items: 'Broccoli 500g, Avocado 250g', total: '₹260', status: 'Delivered' }
+                    ].map((ord) => (
+                      <tr key={ord.id}>
+                        <td><strong className="font-heading" style={{ fontSize: '0.82rem' }}>{ord.id}</strong></td>
+                        <td><span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{ord.name}</span></td>
+                        <td><span className="admin-cell-text">{ord.slot}</span></td>
+                        <td><span className="admin-cell-text">{ord.items}</span></td>
+                        <td><strong className="admin-price-current">{ord.total}</strong></td>
+                        <td>
+                          <span className={`admin-order-status ${ord.status === 'Delivered' ? 'delivered' : ord.status === 'Out for Delivery' ? 'transit' : 'pending'}`}>
+                            {ord.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
 
+        {/* ============================================================= */}
+        {/* TAB 4: NOTIFICATIONS                                          */}
+        {/* ============================================================= */}
         {activeTab === 'notifications' && (
           <div className="row g-4">
             <div className="col-lg-5">
-              <div className="bg-white rounded-5 p-4 p-md-5 shadow-sm border">
-                <div className="d-flex align-items-center gap-2 mb-2 text-success"><Truck size={20} /><span className="fw-bold small">CUSTOMER COMMUNICATION</span></div>
-                <h4 className="font-heading fw-bold mb-2">Send a notification</h4>
-                <p className="small text-muted mb-4">Create announcements for customers. This is saved only in this browser until backend messaging is connected.</p>
-                {notificationSuccess && <div className="alert alert-success rounded-4 small fw-bold">Notification saved successfully.</div>}
-                <form onSubmit={sendNotification} className="d-flex flex-column gap-3">
-                  <div><label className="form-label small fw-bold">Send to</label><select className="form-select rounded-3" value={notificationDraft.audience} onChange={(e) => setNotificationDraft({ ...notificationDraft, audience: e.target.value })}><option>All customers</option><option>Active customers</option><option>New customers</option></select></div>
-                  <div><label className="form-label small fw-bold">Notification title</label><input required className="form-control rounded-3" placeholder="e.g. Fresh mangoes are here!" value={notificationDraft.title} onChange={(e) => setNotificationDraft({ ...notificationDraft, title: e.target.value })} /></div>
-                  <div><label className="form-label small fw-bold">Message</label><textarea required rows={4} className="form-control rounded-3" placeholder="Write your customer update..." value={notificationDraft.message} onChange={(e) => setNotificationDraft({ ...notificationDraft, message: e.target.value })} /></div>
-                  <button className="btn btn-success rounded-pill py-3 fw-bold" style={{ background: '#0A6836' }}>Save notification →</button>
+              <div className="admin-card">
+                <div className="admin-card-header">
+                  <div className="admin-card-icon-sm blue">
+                    <Bell size={16} />
+                  </div>
+                  <div>
+                    <h5 className="admin-card-title mb-0">Send Notification</h5>
+                    <span className="admin-card-desc">Reach your customers</span>
+                  </div>
+                </div>
+
+                <AnimatePresence>
+                  {notificationSuccess && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="admin-success-banner"
+                    >
+                      <CheckCircle2 size={16} />
+                      <span>Notification saved!</span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <form onSubmit={sendNotification}>
+                  <div className="d-flex flex-column gap-3">
+                    <div className="admin-form-group">
+                      <label className="admin-form-label">Audience</label>
+                      <select
+                        className="admin-form-select"
+                        value={notificationDraft.audience}
+                        onChange={(e) => setNotificationDraft({ ...notificationDraft, audience: e.target.value })}
+                      >
+                        <option>All customers</option>
+                        <option>Active customers</option>
+                        <option>New customers</option>
+                      </select>
+                    </div>
+                    <div className="admin-form-group">
+                      <label className="admin-form-label">Title</label>
+                      <input
+                        required
+                        className="admin-form-input"
+                        placeholder="e.g. Fresh mangoes are here!"
+                        value={notificationDraft.title}
+                        onChange={(e) => setNotificationDraft({ ...notificationDraft, title: e.target.value })}
+                      />
+                    </div>
+                    <div className="admin-form-group">
+                      <label className="admin-form-label">Message</label>
+                      <textarea
+                        required
+                        rows={4}
+                        className="admin-form-textarea"
+                        placeholder="Write your customer update..."
+                        value={notificationDraft.message}
+                        onChange={(e) => setNotificationDraft({ ...notificationDraft, message: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <button type="submit" className="admin-btn-submit mt-4">
+                    <Bell size={16} />
+                    <span>Send Notification</span>
+                  </button>
                 </form>
               </div>
             </div>
+
             <div className="col-lg-7">
-              <div className="bg-white rounded-5 p-4 shadow-sm border h-100">
-                <h4 className="font-heading fw-bold mb-1">Notification history</h4>
-                <p className="small text-muted mb-4">{notifications.length} browser-saved notification{notifications.length === 1 ? '' : 's'}</p>
-                {notifications.length === 0 ? <div className="text-center text-muted py-5"><Truck size={34} className="mb-2" /><p className="mb-0">No notifications created yet.</p></div> : <div className="d-flex flex-column gap-3">{notifications.map((notification) => <div key={notification.id} className="border rounded-4 p-3"><div className="d-flex justify-content-between gap-3"><strong>{notification.title}</strong><span className="badge bg-success bg-opacity-10 text-success align-self-start">{notification.audience}</span></div><p className="small text-muted mb-2 mt-2">{notification.message}</p><small className="text-muted">Saved {notification.sentAt}</small></div>)}</div>}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'system' && (
-          <div className="row g-4">
-            <div className="col-md-6 col-xl-4"><div className="bg-white rounded-5 p-4 shadow-sm border h-100"><ShieldAlert className="text-success mb-3" size={28} /><h5 className="font-heading fw-bold">Access management</h5><p className="small text-muted">All signed-in users have Super Admin workspace access in the current frontend setup.</p><span className="badge bg-success">Frontend enabled</span></div></div>
-            <div className="col-md-6 col-xl-4"><div className="bg-white rounded-5 p-4 shadow-sm border h-100"><Package className="text-success mb-3" size={28} /><h5 className="font-heading fw-bold">Store data</h5><p className="small text-muted">Products, categories and notification drafts are stored locally in this browser for now.</p><Link href="/" className="btn btn-sm btn-outline-success rounded-pill">Open storefront</Link></div></div>
-            <div className="col-md-6 col-xl-4"><div className="bg-white rounded-5 p-4 shadow-sm border h-100"><Layers className="text-success mb-3" size={28} /><h5 className="font-heading fw-bold">Backend connection</h5><p className="small text-muted">Backend configuration is intentionally not available here. No Marketplace-Backend files or APIs have been changed.</p><span className="badge bg-secondary">Not connected</span></div></div>
-          </div>
-        )}
-
-        {viewingProduct && (
-          <div
-            className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center p-3"
-            style={{ background: 'rgba(17, 24, 39, 0.62)', zIndex: 2000 }}
-            role="dialog"
-            aria-modal="true"
-            aria-label={`${viewingProduct.name} details`}
-            onClick={() => setViewingProduct(null)}
-          >
-            <div
-              className="bg-white rounded-5 shadow-lg p-4 p-md-5 w-100"
-              style={{ maxWidth: '720px', maxHeight: '90vh', overflowY: 'auto' }}
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="d-flex align-items-start justify-content-between gap-3 mb-4">
-                <div className="d-flex align-items-center gap-3">
-                  <div className="position-relative rounded-4 bg-light" style={{ width: '88px', height: '88px' }}>
-                    <Image src={viewingProduct.image} alt={viewingProduct.name} fill className="object-fit-contain p-2" />
-                  </div>
+              <div className="admin-card" style={{ minHeight: '400px' }}>
+                <div className="d-flex align-items-center justify-content-between mb-4">
                   <div>
-                    <span className="badge bg-success bg-opacity-10 text-success mb-1">{viewingProduct.category}</span>
-                    <h3 className="font-heading fw-bold mb-1">{viewingProduct.name}</h3>
-                    <span className="text-success fw-bold">₹{viewingProduct.price}</span>
-                    <span className="text-muted text-decoration-line-through ms-2">₹{viewingProduct.originalPrice}</span>
+                    <h5 className="admin-card-title mb-1">Notification History</h5>
+                    <span className="admin-card-desc">{notifications.length} saved notification{notifications.length === 1 ? '' : 's'}</span>
                   </div>
                 </div>
-                <button onClick={() => setViewingProduct(null)} className="btn btn-light rounded-circle border" aria-label="Close details">×</button>
-              </div>
 
-              <p className="text-muted mb-4">{viewingProduct.description}</p>
-              <div className="row g-3 small">
-                <div className="col-6 col-md-4"><div className="bg-light rounded-3 p-3"><strong>Availability</strong><br />{viewingProduct.inStock ? 'In stock' : 'Out of stock'}</div></div>
-                <div className="col-6 col-md-4"><div className="bg-light rounded-3 p-3"><strong>Store status</strong><br />{viewingProduct.isAdded !== false ? 'Live on store' : 'Hidden'}</div></div>
-                <div className="col-6 col-md-4"><div className="bg-light rounded-3 p-3"><strong>Rating</strong><br />{viewingProduct.rating} / 5 ({viewingProduct.reviewsCount} reviews)</div></div>
-                <div className="col-6 col-md-4"><div className="bg-light rounded-3 p-3"><strong>Available sizes</strong><br />{viewingProduct.weights.join(', ')}</div></div>
-                <div className="col-6 col-md-4"><div className="bg-light rounded-3 p-3"><strong>Origin</strong><br />{viewingProduct.nutrition.origin}</div></div>
-                <div className="col-6 col-md-4"><div className="bg-light rounded-3 p-3"><strong>Best before</strong><br />{viewingProduct.nutrition.bestBefore}</div></div>
+                {notifications.length === 0 ? (
+                  <div className="text-center py-5">
+                    <Bell size={36} className="mb-3" style={{ color: '#D1D5DB' }} />
+                    <p className="mb-0 admin-cell-text">No notifications created yet.</p>
+                  </div>
+                ) : (
+                  <div className="d-flex flex-column gap-3">
+                    {notifications.map((notification) => (
+                      <div key={notification.id} className="admin-notification-item">
+                        <div className="d-flex justify-content-between gap-3">
+                          <strong style={{ fontSize: '0.9rem' }}>{notification.title}</strong>
+                          <span className="admin-badge-count small">{notification.audience}</span>
+                        </div>
+                        <p className="admin-cell-text mb-2 mt-2">{notification.message}</p>
+                        <small className="admin-cell-text">Saved {notification.sentAt}</small>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
         )}
+
+        {/* ============================================================= */}
+        {/* TAB 5: SYSTEM MANAGEMENT                                      */}
+        {/* ============================================================= */}
+        {activeTab === 'system' && (
+          <div className="row g-4">
+            {[
+              { icon: ShieldAlert, title: 'Access Management', desc: 'All signed-in users have Super Admin workspace access in the current frontend setup.', badge: 'Enabled', badgeClass: 'green' },
+              { icon: Store, title: 'Store Data', desc: 'Products, categories and notification drafts are stored locally in this browser.', badge: 'Local', badgeClass: 'amber', link: '/' },
+              { icon: Activity, title: 'Backend Status', desc: 'Backend configuration is available separately. Marketplace API runs on port 5000.', badge: 'Connected', badgeClass: 'green' }
+            ].map((card, i) => {
+              const Icon = card.icon;
+              return (
+                <div className="col-md-6 col-xl-4" key={i}>
+                  <div className="admin-card h-100">
+                    <div className="admin-system-icon mb-3">
+                      <Icon size={24} />
+                    </div>
+                    <h5 className="font-heading fw-bold mb-2" style={{ fontSize: '1rem' }}>{card.title}</h5>
+                    <p className="admin-cell-text mb-3">{card.desc}</p>
+                    <span className={`admin-system-badge ${card.badgeClass}`}>{card.badge}</span>
+                    {card.link && (
+                      <Link href={card.link} className="admin-link-btn mt-3">
+                        Open storefront <ChevronRight size={14} />
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ============================================================= */}
+        {/* Product Detail Modal                                          */}
+        {/* ============================================================= */}
+        <AnimatePresence>
+          {viewingProduct && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="admin-modal-overlay"
+              onClick={() => setViewingProduct(null)}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                className="admin-modal-content"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="d-flex align-items-start justify-content-between gap-3 mb-4">
+                  <div className="d-flex align-items-center gap-3">
+                    <div className="position-relative rounded-4 bg-light" style={{ width: '80px', height: '80px' }}>
+                      <Image src={viewingProduct.image} alt={viewingProduct.name} fill className="object-fit-contain p-2" />
+                    </div>
+                    <div>
+                      <span className="admin-badge-count small mb-1 d-inline-block">{viewingProduct.category}</span>
+                      <h4 className="font-heading fw-bold mb-1" style={{ fontSize: '1.15rem' }}>{viewingProduct.name}</h4>
+                      <div className="d-flex align-items-center gap-2">
+                        <strong className="admin-price-current" style={{ fontSize: '1.05rem' }}>₹{viewingProduct.price}</strong>
+                        <span className="admin-price-original">₹{viewingProduct.originalPrice}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button onClick={() => setViewingProduct(null)} className="admin-modal-close">
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <p className="admin-cell-text mb-4">{viewingProduct.description}</p>
+
+                <div className="row g-3">
+                  {[
+                    { label: 'Availability', value: viewingProduct.inStock ? 'In stock' : 'Out of stock' },
+                    { label: 'Store Status', value: viewingProduct.isAdded !== false ? 'Live on store' : 'Hidden' },
+                    { label: 'Rating', value: `${viewingProduct.rating}/5 (${viewingProduct.reviewsCount} reviews)` },
+                    { label: 'Sizes', value: viewingProduct.weights.join(', ') },
+                    { label: 'Origin', value: viewingProduct.nutrition.origin },
+                    { label: 'Best Before', value: viewingProduct.nutrition.bestBefore }
+                  ].map((item, idx) => (
+                    <div className="col-6 col-md-4" key={idx}>
+                      <div className="admin-detail-cell">
+                        <span className="admin-detail-label">{item.label}</span>
+                        <span className="admin-detail-value">{item.value}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

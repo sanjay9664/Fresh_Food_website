@@ -14,6 +14,7 @@ import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import { CartDrawer } from '@/components/cart/CartDrawer';
 import { SearchModal } from '@/components/search/SearchModal';
 import { Toast } from '@/components/ui/Toast';
+import { StoreProvider } from '@/store/StoreProvider';
 
 function MainApp({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -64,17 +65,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </head>
       <body>
-        <AuthProvider>
-          <ProductProvider>
-            <CartProvider>
-              <WishlistProvider>
-                <QuickViewProvider>
-                  <MainApp>{children}</MainApp>
-                </QuickViewProvider>
-              </WishlistProvider>
-            </CartProvider>
-          </ProductProvider>
-        </AuthProvider>
+        <StoreProvider>
+          <AuthProvider>
+            <ProductProvider>
+              <CartProvider>
+                <WishlistProvider>
+                  <QuickViewProvider>
+                    <MainApp>{children}</MainApp>
+                  </QuickViewProvider>
+                </WishlistProvider>
+              </CartProvider>
+            </ProductProvider>
+          </AuthProvider>
+        </StoreProvider>
       </body>
     </html>
   );

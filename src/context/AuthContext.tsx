@@ -160,7 +160,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('freshvana_auth', JSON.stringify({ isLoggedIn: true, user: authUser }));
       setLoading(false);
 
-      if (authUser.role === 'admin' || authUser.role === 'ADMIN' || targetRole === 'admin') {
+      if (authUser.role?.toLowerCase().includes('admin') || targetRole === 'admin') {
         router.push('/admin');
       } else {
         router.push('/');
@@ -191,7 +191,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('freshvana_auth', JSON.stringify({ isLoggedIn: true, user: authUser }));
       setLoading(false);
 
-      if (authUser.role === 'admin' || authUser.role === 'ADMIN' || targetRole === 'admin') {
+      if (authUser.role?.toLowerCase().includes('admin') || targetRole === 'admin') {
         router.push('/admin');
       } else {
         router.push('/');
@@ -265,7 +265,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('freshvana_auth', JSON.stringify({ isLoggedIn: true, user: authUser }));
         setLoading(false);
 
-        if (authUser.role === 'admin' || authUser.role === 'ADMIN' || role === 'admin') {
+        if (authUser.role?.toLowerCase().includes('admin') || role === 'admin') {
           router.push('/admin');
         } else {
           router.push('/');
@@ -287,7 +287,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('freshvana_auth', JSON.stringify({ isLoggedIn: true, user: authUser }));
     setLoading(false);
 
-    if (authUser.role === 'admin' || authUser.role === 'ADMIN' || role === 'admin') {
+    if (authUser.role?.toLowerCase().includes('admin') || role === 'admin') {
       router.push('/admin');
     } else {
       router.push('/');

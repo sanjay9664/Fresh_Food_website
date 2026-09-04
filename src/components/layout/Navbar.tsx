@@ -245,7 +245,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
                           <span className="text-muted small" style={{ fontSize: '0.72rem' }}>{user?.email}</span>
                         </div>
 
-                        {user?.role === 'admin' && (
+                        {(user?.role?.toLowerCase().includes('admin')) && (
                           <Link
                             href="/admin"
                             onClick={() => setProfileDropdownOpen(false)}
@@ -405,7 +405,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
 
                 {/* Super Admin & Profile Actions */}
                 <div className="pt-3 border-top d-flex flex-column gap-2">
-                  {isLoggedIn && user?.role === 'admin' && (
+                  {isLoggedIn && user?.role?.toLowerCase().includes('admin') && (
                     <Link
                       href="/admin"
                       onClick={() => setMobileMenuOpen(false)}

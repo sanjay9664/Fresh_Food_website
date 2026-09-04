@@ -357,37 +357,38 @@ export const CartDrawer: React.FC = () => {
                     </div>
                     <button
                       onClick={removeCoupon}
-                      className="btn btn-sm btn-link text-danger p-0 text-decoration-none"
+                      className="btn btn-sm btn-link text-danger p-0 text-decoration-none fw-bold"
                     >
                       Remove
                     </button>
                   </div>
                 ) : (
                   <form onSubmit={handleApplyCoupon} className="d-flex gap-2">
-                    <div className="input-group input-group-sm">
-                      <span className="input-group-text bg-white border-end-0">
-                        <Tag size={14} className="text-muted" />
+                    <div className="input-group">
+                      <span className="input-group-text bg-white border-end-0 ps-2 pe-2">
+                        <Tag size={15} className="text-success" />
                       </span>
                       <input
                         type="text"
                         value={couponInput}
                         onChange={(e) => setCouponInput(e.target.value)}
-                        placeholder="Promo Code (FRESH20)"
-                        className="form-control border-start-0 text-uppercase"
+                        placeholder="Coupon (e.g. FRESH20)"
+                        className="form-control border-start-0 border-end-0 text-uppercase small shadow-none"
+                        style={{ fontSize: '0.82rem' }}
                       />
-                      <button type="submit" className="btn btn-outline-success">
+                      <button type="submit" className="btn btn-success px-3 fw-bold small" style={{ background: '#0A6836' }}>
                         Apply
                       </button>
                     </div>
                   </form>
                 )}
-                {couponError && <div className="small text-danger mt-1">{couponError}</div>}
+                {couponError && <div className="small text-danger mt-1 fw-semibold">{couponError}</div>}
               </div>
             )}
 
             {/* Footer Summary & Checkout CTA */}
             {cart.length > 0 && (
-              <div className="p-3 border-top bg-white">
+              <div className="p-3 border-top bg-white mt-auto position-sticky bottom-0 shadow-lg" style={{ zIndex: 20 }}>
                 <div className="d-flex justify-content-between mb-1 small text-muted">
                   <span>Subtotal</span>
                   <span className="fw-bold text-dark">₹{subtotal}</span>
@@ -407,25 +408,26 @@ export const CartDrawer: React.FC = () => {
 
                 <div className="d-flex justify-content-between mb-3 fs-5 fw-bold text-dark border-top pt-2">
                   <span>Total Amount</span>
-                  <span className="text-success font-heading fs-4">₹{totalAmount}</span>
+                  <span className="text-success font-heading fs-4 fw-extrabold">₹{totalAmount}</span>
                 </div>
 
-                <div className="d-flex gap-2">
+                <div className="d-flex gap-2 pb-2">
                   <Link
                     href="/cart"
                     onClick={() => setIsCartOpen(false)}
-                    className="btn btn-outline-secondary rounded-pill py-2 flex-grow-1 fw-semibold"
+                    className="btn btn-outline-secondary rounded-pill py-2.5 flex-grow-1 fw-bold text-center"
+                    style={{ fontSize: '0.9rem' }}
                   >
                     View Cart
                   </Link>
                   <Link
                     href="/checkout"
                     onClick={() => setIsCartOpen(false)}
-                    className="btn btn-success rounded-pill py-2 flex-grow-1 fw-bold d-flex align-items-center justify-content-center gap-2"
-                    style={{ background: 'linear-gradient(135deg, #FF6F00 0%, #E66000 100%)', border: 'none' }}
+                    className="btn btn-success rounded-pill py-2.5 flex-grow-1 fw-extrabold d-flex align-items-center justify-content-center gap-2 shadow-md"
+                    style={{ background: 'linear-gradient(135deg, #FF6F00 0%, #E66000 100%)', border: 'none', fontSize: '0.95rem' }}
                   >
                     <span>Checkout</span>
-                    <ArrowRight size={16} />
+                    <ArrowRight size={18} />
                   </Link>
                 </div>
               </div>

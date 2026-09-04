@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
-import { Home, Layers, ShoppingBag, Heart, Flame, Search } from 'lucide-react';
+import { Home, Layers, ShoppingBag, Heart, Flame, Search, PackageCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface MobileBottomNavProps {
@@ -31,17 +31,16 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onOpenSearch }
       isAction: false
     },
     {
+      name: 'Orders',
+      href: '/orders',
+      icon: PackageCheck,
+      isAction: false
+    },
+    {
       name: 'Deals',
       href: '/deals',
       icon: Flame,
       badge: 'HOT',
-      isAction: false
-    },
-    {
-      name: 'Saved',
-      href: '/wishlist',
-      icon: Heart,
-      badgeCount: wishlistCount,
       isAction: false
     },
     {

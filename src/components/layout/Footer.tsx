@@ -201,8 +201,13 @@ export const Footer: React.FC = () => {
             </h6>
             <ul className="list-unstyled d-flex flex-column gap-2 small text-white-50">
               <li>
-                <Link href="/contact" className="text-white-50 text-decoration-none hover-text-white transition-all">
-                  Track Your Order
+                <Link href="/orders" className="text-white-50 text-decoration-none hover-text-white transition-all fw-bold text-success">
+                  📦 Track My Orders & Live Status
+                </Link>
+              </li>
+              <li>
+                <Link href="/account" className="text-white-50 text-decoration-none hover-text-white transition-all">
+                  👤 My Profile & Saved Addresses
                 </Link>
               </li>
               <li>

@@ -108,3 +108,49 @@ export interface DeliverySlot {
   label?: string;
   isExpress?: boolean;
 }
+
+export interface SavedAddress extends DeliveryAddress {
+  id: string;
+  tag: 'Home' | 'Work' | 'Other';
+  isDefault?: boolean;
+}
+
+export type OrderStatus = 'Order Confirmed' | 'Harvested & Packed' | 'Out for Delivery' | 'Delivered' | 'Cancelled';
+
+export interface OrderItem {
+  id: string;
+  name: string;
+  weight: string;
+  price: number;
+  quantity: number;
+  image: string;
+}
+
+export interface Order {
+  id: string;
+  orderNumber: string;
+  createdAt: string;
+  status: OrderStatus;
+  items: OrderItem[];
+  itemCount: number;
+  totalAmount: number;
+  discountAmount?: number;
+  couponCode?: string;
+  paymentMethod: string;
+  paymentStatus: 'Paid' | 'Pending' | 'COD';
+  address: DeliveryAddress;
+  deliverySlot: DeliverySlot;
+  deliveryTimeText: string;
+}
+
+export interface Coupon {
+  code: string;
+  title: string;
+  description: string;
+  discountType: 'flat' | 'percentage';
+  discountValue: number;
+  minOrderValue: number;
+  maxDiscount?: number;
+  badge: string;
+  expiryDate: string;
+}

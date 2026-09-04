@@ -31,6 +31,8 @@ function ShopContent() {
   const [maxPrice, setMaxPrice] = useState<number>(350);
   const [minRating, setMinRating] = useState<number>(0);
   const [organicOnly, setOrganicOnly] = useState<boolean>(false);
+  const [inStockOnly, setInStockOnly] = useState<boolean>(false);
+  const [selectedBadge, setSelectedBadge] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('popularity');
   const [mobileFilterOpen, setMobileFilterOpen] = useState<boolean>(false);
 
@@ -70,6 +72,14 @@ function ShopContent() {
       result = result.filter((p) => p.badge === 'Organic');
     }
 
+    if (inStockOnly) {
+      result = result.filter((p) => p.inStock);
+    }
+
+    if (selectedBadge !== 'all') {
+      result = result.filter((p) => p.badge === selectedBadge);
+    }
+
     if (sortBy === 'price-asc') {
       result.sort((a, b) => a.price - b.price);
     } else if (sortBy === 'price-desc') {
@@ -81,7 +91,7 @@ function ShopContent() {
     }
 
     return result;
-  }, [products, selectedCategory, searchQuery, maxPrice, minRating, organicOnly, sortBy]);
+  }, [products, selectedCategory, searchQuery, maxPrice, minRating, organicOnly, inStockOnly, selectedBadge, sortBy]);
 
   const resetFilters = () => {
     setSelectedCategory('all');
@@ -89,6 +99,8 @@ function ShopContent() {
     setMaxPrice(350);
     setMinRating(0);
     setOrganicOnly(false);
+    setInStockOnly(false);
+    setSelectedBadge('all');
     setSortBy('popularity');
   };
 
@@ -274,7 +286,7 @@ function ShopContent() {
               </div>
 
               {/* 100% Organic Switch */}
-              <div className="form-check form-switch mb-2">
+              <div className="form-check form-switch mb-3">
                 <input
                   className="form-check-input"
                   type="checkbox"
@@ -282,9 +294,41 @@ function ShopContent() {
                   checked={organicOnly}
                   onChange={(e) => setOrganicOnly(e.target.checked)}
                 />
-                <label className="form-check-input-label font-heading fw-bold text-dark small ms-2" htmlFor="organicSwitchShop">
+                <label className="form-check-label font-heading fw-bold text-dark small ms-2" htmlFor="organicSwitchShop">
                   100% Organic Certified Only
                 </label>
+              </div>
+
+              {/* In-Stock Only Switch */}
+              <div className="form-check form-switch mb-3">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id="inStockSwitchShop"
+                  checked={inStockOnly}
+                  onChange={(e) => setInStockOnly(e.target.checked)}
+                />
+                <label className="form-check-label font-heading fw-bold text-dark small ms-2" htmlFor="inStockSwitchShop">
+                  In Stock Items Only
+                </label>
+              </div>
+
+              {/* Badge Tag Filter Selector */}
+              <div className="mb-2">
+                <label className="form-label font-heading fw-bold text-dark small mb-2">
+                  Product Type / Badge
+                </label>
+                <select
+                  className="form-select form-select-sm rounded-3 py-2 small"
+                  value={selectedBadge}
+                  onChange={(e) => setSelectedBadge(e.target.value)}
+                >
+                  <option value="all">All Badges & Types</option>
+                  <option value="Organic">🌿 Organic Certified</option>
+                  <option value="Farm Fresh">🌾 Farm Fresh</option>
+                  <option value="Exotic">✨ Exotic Produce</option>
+                  <option value="Best Seller">🔥 Best Sellers</option>
+                </select>
               </div>
             </div>
           </div>

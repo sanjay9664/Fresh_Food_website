@@ -13,6 +13,8 @@ import { Footer } from '@/components/layout/Footer';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import { CartDrawer } from '@/components/cart/CartDrawer';
 import { SearchModal } from '@/components/search/SearchModal';
+import { MobileAppBanner } from '@/components/layout/MobileAppBanner';
+import { FloatingActiveOrderBar } from '@/components/layout/FloatingActiveOrderBar';
 import { Toast } from '@/components/ui/Toast';
 import { StoreProvider } from '@/store/StoreProvider';
 
@@ -23,10 +25,14 @@ function MainApp({ children }: { children: React.ReactNode }) {
 
   const isLoginPage = pathname === '/login';
   const isAdminPage = pathname?.startsWith('/admin');
+  const isCheckoutPage = pathname === '/checkout';
   const isMinimalPage = isLoginPage || isAdminPage;
 
   return (
     <>
+      {/* Mobile App Install Top Bar */}
+      {!isMinimalPage && !isCheckoutPage && <MobileAppBanner />}
+
       {/* Hide Navbar on Login and Admin Pages */}
       {!isMinimalPage && <Navbar onOpenSearch={() => setIsSearchOpen(true)} />}
 
@@ -37,8 +43,11 @@ function MainApp({ children }: { children: React.ReactNode }) {
       {/* Hide Footer on Login and Admin Pages */}
       {!isMinimalPage && <Footer />}
 
-      {/* Mobile App Style Bottom Navigation Bar */}
-      {!isMinimalPage && <MobileBottomNav onOpenSearch={() => setIsSearchOpen(true)} />}
+      {/* Floating Active Order Live Tracking Bar */}
+      {!isMinimalPage && !isCheckoutPage && <FloatingActiveOrderBar />}
+
+      {/* Mobile App Style Bottom Navigation Bar (Hidden during checkout to prevent button overlaps) */}
+      {!isMinimalPage && !isCheckoutPage && <MobileBottomNav onOpenSearch={() => setIsSearchOpen(true)} />}
 
       {!isMinimalPage && <CartDrawer />}
 

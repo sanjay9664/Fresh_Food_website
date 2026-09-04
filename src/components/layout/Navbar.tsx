@@ -25,7 +25,9 @@ import {
   Home,
   Tag,
   Info,
-  PhoneCall
+  PhoneCall,
+  PackageCheck,
+  MapPin
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -61,9 +63,29 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
     { name: 'Categories', href: '/categories', icon: Layers },
     { name: 'Shop', href: '/shop', icon: ShoppingBag },
     { name: 'Fresh Deals', href: '/deals', badge: 'HOT', icon: Tag },
+    { name: 'My Orders', href: '/orders', icon: PackageCheck },
+    { name: 'My Account', href: '/account', icon: User },
     { name: 'About Us', href: '/about', icon: Info },
     { name: 'Contact Us', href: '/contact', icon: PhoneCall }
   ];
+
+  // Pincode & Express Delivery Location State
+  const [pincode, setPincode] = useState('560102');
+  const [locationName, setLocationName] = useState('HSR Layout');
+  const [isPincodeModalOpen, setIsPincodeModalOpen] = useState(false);
+  const [tempPincode, setTempPincode] = useState('560102');
+
+  const handlePincodeSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (tempPincode.trim().length === 6) {
+      setPincode(tempPincode.trim());
+      if (tempPincode.startsWith('56')) setLocationName('HSR Layout, Bengaluru');
+      else if (tempPincode.startsWith('40')) setLocationName('Colaba, Mumbai');
+      else if (tempPincode.startsWith('11')) setLocationName('Connaught Place, Delhi');
+      else setLocationName(`Area ${tempPincode}`);
+      setIsPincodeModalOpen(false);
+    }
+  };
 
   return (
     <>
@@ -71,14 +93,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
       <div className="top-bar-v2 fixed-top w-100" style={{ zIndex: 1045 }}>
         <div className="container">
           <div className="d-flex align-items-center justify-content-between small">
-            <div className="d-flex align-items-center gap-2">
-              <Truck size={14} className="text-warning" />
-              <span>Free Delivery on orders above <strong>₹499</strong></span>
-              <span className="opacity-50">|</span>
-              <div className="d-flex align-items-center gap-1">
-                <ShieldCheck size={13} className="text-warning" />
-                <span>100% Fresh • Organic • Chemical Free</span>
-              </div>
+            {/* Express Delivery Pincode Selector */}
+            <div
+              onClick={() => setIsPincodeModalOpen(true)}
+              className="d-flex align-items-center gap-1.5 cursor-pointer hover-opacity-80 py-0.5 px-2 rounded-pill bg-white bg-opacity-10 text-white"
+            >
+              <Truck size={13} className="text-warning flex-shrink-0" />
+              <span className="fw-semibold">Deliver to: <strong className="text-warning">{pincode} ({locationName})</strong></span>
+              <span className="badge bg-warning text-dark font-heading fw-bold px-1.5 py-0.5 ms-1" style={{ fontSize: '0.62rem' }}>
+                ⚡ 15-30 MINS
+              </span>
             </div>
 
             <div className="d-none d-md-flex align-items-center gap-2">
@@ -93,6 +117,59 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
           </div>
         </div>
       </div>
+
+      {/* Pincode Location Modal */}
+      <AnimatePresence>
+        {isPincodeModalOpen && (
+          <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center p-3" style={{ zIndex: 3000 }}>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsPincodeModalOpen(false)}
+              className="position-absolute top-0 start-0 w-100 h-100"
+              style={{ background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)' }}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="position-relative bg-white rounded-4 p-4 shadow-xl w-100 max-w-sm"
+              style={{ zIndex: 3001 }}
+            >
+              <div className="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                <div className="d-flex align-items-center gap-2">
+                  <Truck size={20} className="text-success" />
+                  <h6 className="font-heading fw-bold text-dark mb-0">Check Delivery Pincode</h6>
+                </div>
+                <button onClick={() => setIsPincodeModalOpen(false)} className="btn btn-sm btn-light rounded-circle p-1">✕</button>
+              </div>
+
+              <form onSubmit={handlePincodeSubmit}>
+                <label className="form-label small fw-bold text-muted mb-2">Enter 6-digit Pincode</label>
+                <div className="d-flex gap-2 mb-3">
+                  <input
+                    type="text"
+                    maxLength={6}
+                    required
+                    className="form-control rounded-3 font-heading fw-bold text-center fs-5"
+                    value={tempPincode}
+                    onChange={(e) => setTempPincode(e.target.value)}
+                  />
+                  <button type="submit" className="btn btn-success rounded-3 px-3 fw-bold flex-shrink-0" style={{ background: '#0A6836' }}>
+                    Check
+                  </button>
+                </div>
+
+                <div className="bg-light rounded-3 p-2.5 border small">
+                  <span className="fw-bold text-success d-block">✓ Express Delivery Available!</span>
+                  <span className="text-muted d-block" style={{ fontSize: '0.75rem' }}>Fresh organic produce delivered within 15-30 minutes.</span>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Main Sticky Header */}
       <header
@@ -236,45 +313,65 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
                 {profileDropdownOpen && (
                   <div
                     className="position-absolute end-0 mt-2 bg-white rounded-4 shadow-lg border p-2 animate-fade-in"
-                    style={{ width: '220px', zIndex: 1060 }}
+                    style={{ width: '230px', zIndex: 1060 }}
                   >
-                    {isLoggedIn ? (
-                      <div>
-                        <div className="p-2 border-bottom mb-1">
-                          <span className="d-block text-dark fw-bold small">{user?.name}</span>
-                          <span className="text-muted small" style={{ fontSize: '0.72rem' }}>{user?.email}</span>
-                        </div>
-
-                        {(user?.role?.toLowerCase().includes('admin')) && (
-                          <Link
-                            href="/admin"
-                            onClick={() => setProfileDropdownOpen(false)}
-                            className="dropdown-item rounded-3 py-2 px-3 small fw-semibold text-dark d-flex align-items-center gap-2 mb-1"
-                          >
-                            <ShieldAlert size={16} className="text-warning" />
-                            <span>Super Admin Panel</span>
-                          </Link>
-                        )}
-
-                        <button
-                          onClick={() => {
-                            setProfileDropdownOpen(false);
-                            logout();
-                          }}
-                          className="btn btn-danger btn-sm rounded-3 w-100 py-2 px-3 fw-bold d-flex align-items-center justify-content-center gap-2 border-0 mt-1"
-                        >
-                          <LogOut size={16} />
-                          <span>Logout / Sign Out</span>
-                        </button>
+                    {isLoggedIn && (
+                      <div className="p-2 border-bottom mb-2">
+                        <span className="d-block text-dark fw-bold small">{user?.name}</span>
+                        <span className="text-muted small d-block text-truncate" style={{ fontSize: '0.72rem' }}>
+                          {user?.email}
+                        </span>
                       </div>
+                    )}
+
+                    <Link
+                      href="/orders"
+                      onClick={() => setProfileDropdownOpen(false)}
+                      className="dropdown-item rounded-3 py-2 px-3 small fw-bold text-dark d-flex align-items-center gap-2 mb-1"
+                    >
+                      <PackageCheck size={17} className="text-success" />
+                      <span>📦 My Orders & Tracking</span>
+                    </Link>
+
+                    <Link
+                      href="/account"
+                      onClick={() => setProfileDropdownOpen(false)}
+                      className="dropdown-item rounded-3 py-2 px-3 small fw-semibold text-dark d-flex align-items-center gap-2 mb-1"
+                    >
+                      <User size={17} className="text-primary" />
+                      <span>👤 My Profile & Addresses</span>
+                    </Link>
+
+                    {isLoggedIn && user?.role?.toLowerCase().includes('admin') && (
+                      <Link
+                        href="/admin"
+                        onClick={() => setProfileDropdownOpen(false)}
+                        className="dropdown-item rounded-3 py-2 px-3 small fw-semibold text-dark d-flex align-items-center gap-2 mb-1 bg-warning bg-opacity-10"
+                      >
+                        <ShieldAlert size={17} className="text-warning" />
+                        <span>Super Admin Panel</span>
+                      </Link>
+                    )}
+
+                    {isLoggedIn ? (
+                      <button
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          logout();
+                        }}
+                        className="btn btn-outline-danger btn-sm rounded-3 w-100 py-2 px-3 fw-bold d-flex align-items-center justify-content-center gap-2 border-0 mt-2"
+                      >
+                        <LogOut size={16} />
+                        <span>Logout / Sign Out</span>
+                      </button>
                     ) : (
                       <Link
                         href="/login"
                         onClick={() => setProfileDropdownOpen(false)}
-                        className="btn btn-success btn-sm rounded-3 w-100 py-2 fw-bold text-center border-0 text-white d-block"
+                        className="btn btn-success btn-sm rounded-3 w-100 py-2 fw-bold text-center border-0 text-white d-block mt-2"
                         style={{ background: '#0A6836' }}
                       >
-                        Sign In Now
+                        Sign In / Register
                       </Link>
                     )}
                   </div>

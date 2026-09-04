@@ -30,7 +30,9 @@ export default function CheckoutPage() {
   const {
     cart,
     subtotal,
+    couponCode,
     couponDiscountAmount,
+    applyCoupon,
     deliveryFee,
     totalAmount,
     clearCart,
@@ -41,6 +43,7 @@ export default function CheckoutPage() {
   } = useCart();
 
   const [currentStep, setCurrentStep] = useState<number>(1);
+  const [isCouponDrawerOpen, setIsCouponDrawerOpen] = useState(false);
 
   // Form State Step 1: Address
   const [addressForm, setAddressForm] = useState({
@@ -111,6 +114,56 @@ Thank you for your organic order! 🍎🥦`;
       setWhatsappMsg(messageText);
       setOrderConfirmed(true);
       setCurrentStep(4);
+
+      // Save order to localStorage for /orders tracking page
+      const newOrderObj = {
+        id: `ord-${Date.now()}`,
+        orderNumber: newOrderId,
+        createdAt: 'Just Now',
+        status: 'Order Confirmed',
+        items: cart.map((item) => ({
+          id: item.product.id,
+          name: item.product.name,
+          weight: item.selectedWeight,
+          price: item.itemPrice,
+          quantity: item.quantity,
+          image: item.product.image || '/images/carrots.png'
+        })),
+        itemCount: cart.reduce((acc, i) => acc + i.quantity, 0),
+        totalAmount: totalAmount,
+        discountAmount: couponDiscountAmount,
+        couponCode: couponCode || undefined,
+        paymentMethod: paymentMethod === 'upi' ? `UPI (${upiId})` : paymentMethod.toUpperCase(),
+        paymentStatus: paymentMethod === 'cod' ? 'COD' : 'Paid',
+        address: {
+          fullName: addressForm.fullName,
+          mobile: addressForm.mobile,
+          email: addressForm.email,
+          address: addressForm.address,
+          landmark: addressForm.landmark,
+          city: addressForm.city,
+          state: addressForm.state,
+          pincode: addressForm.pincode
+        },
+        deliverySlot: {
+          date: deliveryDate,
+          timeSlot: deliverySlot,
+          slotTimeText: slotTimeText,
+          isExpress: deliverySlot === 'Express'
+        },
+        deliveryTimeText: `${deliveryDate} · ${slotTimeText}`
+      };
+
+      try {
+        const existingSaved = localStorage.getItem('freshvana_customer_orders');
+        const existingOrders = existingSaved ? JSON.parse(existingSaved) : [];
+        localStorage.setItem(
+          'freshvana_customer_orders',
+          JSON.stringify([newOrderObj, ...(Array.isArray(existingOrders) ? existingOrders : [])])
+        );
+      } catch (e) {
+        console.error('Failed to save order to localStorage', e);
+      }
 
       // Automatically launch WhatsApp link for 8707375679
       sendOrderToWhatsApp(messageText);
@@ -258,6 +311,15 @@ Thank you for your organic order! 🍎🥦`;
             </div>
 
             <div className="d-flex flex-wrap justify-content-center gap-3">
+              <Link
+                href="/orders"
+                className="btn btn-success rounded-pill px-4 py-3 fw-bold text-white d-flex align-items-center gap-2 shadow-sm"
+                style={{ background: '#0A6836', border: 'none' }}
+              >
+                <PackageCheck size={20} />
+                <span>Track & View Order Details</span>
+              </Link>
+
               <button
                 type="button"
                 onClick={() => sendOrderToWhatsApp()}
@@ -265,10 +327,10 @@ Thank you for your organic order! 🍎🥦`;
                 style={{ background: '#25D366', border: 'none' }}
               >
                 <MessageSquare size={20} />
-                <span>Send / Resend Order Details on WhatsApp (8707375679)</span>
+                <span>Send on WhatsApp (8707375679)</span>
               </button>
 
-              <Link href="/shop" className="btn btn-outline-success rounded-pill px-5 py-3 fw-bold">
+              <Link href="/shop" className="btn btn-outline-success rounded-pill px-4 py-3 fw-bold">
                 Continue Fresh Shopping
               </Link>
             </div>
@@ -423,23 +485,25 @@ Thank you for your organic order! 🍎🥦`;
 
                       <div className="p-3 bg-light rounded-4 border">
                         <label className="form-label fw-bold small text-dark mb-2">DELIVERY DATE</label>
-                        <div className="d-flex gap-2">
+                        <div className="row g-2">
                           {['Today', 'Tomorrow', 'Day After'].map((d) => {
                             const isSel = deliveryDate === d;
                             return (
-                              <button
-                                key={d}
-                                type="button"
-                                onClick={() => setDeliverySlotPreference(deliverySlot, d)}
-                                className="btn flex-grow-1 py-2 rounded-3 fw-bold border transition-all"
-                                style={{
-                                  backgroundColor: isSel ? '#0A6836' : '#FFFFFF',
-                                  color: isSel ? '#FFFFFF' : '#1E293B',
-                                  borderColor: isSel ? '#0A6836' : '#CBD5E1'
-                                }}
-                              >
-                                {d}
-                              </button>
+                              <div className="col-4" key={d}>
+                                <button
+                                  type="button"
+                                  onClick={() => setDeliverySlotPreference(deliverySlot, d)}
+                                  className="btn w-100 py-2.5 px-1 rounded-3 fw-bold border transition-all text-truncate"
+                                  style={{
+                                    fontSize: '0.8rem',
+                                    backgroundColor: isSel ? '#0A6836' : '#FFFFFF',
+                                    color: isSel ? '#FFFFFF' : '#1E293B',
+                                    borderColor: isSel ? '#0A6836' : '#CBD5E1'
+                                  }}
+                                >
+                                  {d}
+                                </button>
+                              </div>
                             );
                           })}
                         </div>
@@ -551,38 +615,40 @@ Thank you for your organic order! 🍎🥦`;
                 </AnimatePresence>
 
                 {/* Step Action Buttons */}
-                <div className="d-flex justify-content-between pt-4 border-top">
-                  {currentStep > 1 ? (
-                    <button
-                      onClick={() => setCurrentStep(currentStep - 1)}
-                      className="btn btn-outline-secondary rounded-pill px-4 fw-semibold d-flex align-items-center gap-2"
-                    >
-                      <ArrowLeft size={16} /> Previous
-                    </button>
-                  ) : (
-                    <div />
+                <div className="row g-2 pt-4 border-top">
+                  {currentStep > 1 && (
+                    <div className="col-5 col-sm-4">
+                      <button
+                        onClick={() => setCurrentStep(currentStep - 1)}
+                        className="btn btn-outline-secondary rounded-pill w-100 py-3 fw-bold d-flex align-items-center justify-content-center gap-1"
+                      >
+                        <ArrowLeft size={16} />
+                        <span>Previous</span>
+                      </button>
+                    </div>
                   )}
-
-                  <button
-                    onClick={handleNextStep}
-                    className="btn btn-success rounded-pill px-5 py-3 fw-bold d-flex align-items-center gap-2"
-                    style={{ background: 'linear-gradient(135deg, #FF6F00 0%, #E66000 100%)', border: 'none' }}
-                  >
-                    <span>{currentStep === 3 ? `Pay & Confirm (₹${totalAmount})` : 'Continue'}</span>
-                    <ArrowRight size={18} />
-                  </button>
+                  <div className={currentStep > 1 ? "col-7 col-sm-8" : "col-12"}>
+                    <button
+                      onClick={handleNextStep}
+                      className="btn btn-success rounded-pill w-100 py-3 fw-extrabold d-flex align-items-center justify-content-center gap-2 shadow-md"
+                      style={{ background: 'linear-gradient(135deg, #FF6F00 0%, #E66000 100%)', border: 'none' }}
+                    >
+                      <span>{currentStep === 3 ? `Pay & Confirm (₹${totalAmount})` : 'Continue'}</span>
+                      <ArrowRight size={18} />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Order Summary Side Sidebar */}
             <div className="col-lg-4">
-              <div className="bg-white rounded-4 border shadow-sm p-4">
+              <div className="bg-white rounded-4 border shadow-sm p-4 sticky-top" style={{ top: '100px' }}>
                 <h5 className="font-heading fw-bold text-dark mb-3 pb-2 border-bottom">
                   Order Summary ({cart.length} items)
                 </h5>
 
-                <div className="d-flex flex-column gap-2 mb-3" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                <div className="d-flex flex-column gap-2 mb-3" style={{ maxHeight: '180px', overflowY: 'auto' }}>
                   {cart.map((item) => (
                     <div key={`${item.product.id}-${item.selectedWeight}`} className="d-flex justify-content-between small">
                       <span className="text-dark">
@@ -593,14 +659,36 @@ Thank you for your organic order! 🍎🥦`;
                   ))}
                 </div>
 
+                {/* Available Offers Banner */}
+                <div
+                  onClick={() => setIsCouponDrawerOpen(true)}
+                  className="p-3 rounded-3 mb-3 border d-flex align-items-center justify-content-between cursor-pointer transition-all hover-bg-light"
+                  style={{ background: 'radial-gradient(circle, #FFF8E1 0%, #FFF3E0 100%)', borderColor: '#FFE0B2' }}
+                >
+                  <div className="d-flex align-items-center gap-2">
+                    <Zap size={18} className="text-warning flex-shrink-0" />
+                    <div>
+                      <strong className="d-block text-dark small" style={{ fontSize: '0.82rem' }}>
+                        {couponCode ? `Coupon '${couponCode}' Applied!` : 'Apply Coupon & Save Extra'}
+                      </strong>
+                      <span className="text-muted d-block" style={{ fontSize: '0.72rem' }}>
+                        {couponCode ? `Saved ₹${couponDiscountAmount}` : 'Click to view active discount vouchers'}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="btn btn-xs btn-outline-warning text-dark fw-bold rounded-pill px-2.5 py-1" style={{ fontSize: '0.72rem' }}>
+                    {couponCode ? 'Change' : 'Offers →'}
+                  </span>
+                </div>
+
                 <div className="border-top pt-3 d-flex flex-column gap-2 small">
                   <div className="d-flex justify-content-between text-muted">
                     <span>Subtotal</span>
                     <span>₹{subtotal}</span>
                   </div>
                   {couponDiscountAmount > 0 && (
-                    <div className="d-flex justify-content-between text-success">
-                      <span>Discount</span>
+                    <div className="d-flex justify-content-between text-success fw-bold">
+                      <span>Coupon Discount ({couponCode})</span>
                       <span>-₹{couponDiscountAmount}</span>
                     </div>
                   )}
@@ -618,6 +706,78 @@ Thank you for your organic order! 🍎🥦`;
           </div>
         )}
       </div>
+
+      {/* 1-Click Coupon Modal Drawer */}
+      <AnimatePresence>
+        {isCouponDrawerOpen && (
+          <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center p-3" style={{ zIndex: 3000 }}>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsCouponDrawerOpen(false)}
+              className="position-absolute top-0 start-0 w-100 h-100"
+              style={{ background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)' }}
+            />
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.95 }}
+              className="position-relative bg-white rounded-4 p-4 shadow-xl w-100 max-w-md"
+              style={{ zIndex: 3001 }}
+            >
+              <div className="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                <div className="d-flex align-items-center gap-2">
+                  <Zap size={20} className="text-warning" />
+                  <h5 className="font-heading fw-bold text-dark mb-0">Apply Coupon Code</h5>
+                </div>
+                <button
+                  onClick={() => setIsCouponDrawerOpen(false)}
+                  className="btn btn-sm btn-light rounded-circle p-1"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="d-flex flex-column gap-3 mb-3" style={{ maxHeight: '350px', overflowY: 'auto' }}>
+                {[
+                  { code: 'FRESH100', title: '₹100 Flat Discount', desc: 'Flat ₹100 OFF on orders above ₹499', badge: 'POPULAR' },
+                  { code: 'ORGANIC20', title: '20% OFF Organic Produce', desc: 'Get 20% discount on all organic items', badge: 'BEST VALUE' },
+                  { code: 'WELCOME50', title: '50% OFF New User Deal', desc: '50% OFF up to ₹150 for first-time shoppers', badge: 'WELCOME' },
+                  { code: 'FREEDEL', title: 'Free Express Delivery', desc: 'Waive off ₹40 delivery fee on any order', badge: 'FREE SHIPPING' }
+                ].map((c) => (
+                  <div key={c.code} className="p-3 bg-light rounded-3 border d-flex align-items-center justify-content-between">
+                    <div>
+                      <div className="d-flex align-items-center gap-2 mb-1">
+                        <code className="bg-white px-2 py-0.5 rounded border fw-bold text-success" style={{ fontSize: '0.85rem' }}>
+                          {c.code}
+                        </code>
+                        <span className="badge bg-warning-subtle text-dark rounded-pill px-2 py-0.5 small fw-bold">
+                          {c.badge}
+                        </span>
+                      </div>
+                      <h6 className="fw-bold text-dark mb-0" style={{ fontSize: '0.88rem' }}>{c.title}</h6>
+                      <span className="text-muted d-block" style={{ fontSize: '0.75rem' }}>{c.desc}</span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        applyCoupon(c.code);
+                        setIsCouponDrawerOpen(false);
+                      }}
+                      className="btn btn-sm btn-success rounded-pill px-3 fw-bold flex-shrink-0"
+                      style={{ background: '#0A6836' }}
+                    >
+                      {couponCode === c.code ? 'Applied ✓' : 'Apply'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

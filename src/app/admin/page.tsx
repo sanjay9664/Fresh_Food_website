@@ -425,6 +425,36 @@ export default function AdminDashboardPage() {
 
             <div className="d-none d-xl-flex align-items-center gap-2 flex-shrink-0">
               <button
+                type="button"
+                onClick={() => {
+                  const headers = ['ID', 'Name', 'Category', 'Price', 'Original Price', 'Badge', 'In Stock', 'Stock (Kg)'];
+                  const rows = allProducts.map(p => [
+                    p.id,
+                    `"${p.name.replace(/"/g, '""')}"`,
+                    `"${p.category}"`,
+                    p.price,
+                    p.originalPrice,
+                    p.badge,
+                    p.inStock ? 'Yes' : 'No',
+                    p.stockQuantityKg || 20
+                  ]);
+                  const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+                  const encodedUri = encodeURI(csvContent);
+                  const link = document.createElement('a');
+                  link.setAttribute('href', encodedUri);
+                  link.setAttribute('download', `freshvana_inventory_${Date.now()}.csv`);
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }}
+                className="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1"
+                title="Export Catalog to CSV"
+              >
+                <Download size={14} />
+                <span>Export CSV</span>
+              </button>
+
+              <button
                 onClick={resetToDefaults}
                 className="admin-btn-outline-danger"
               >

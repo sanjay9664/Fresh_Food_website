@@ -4,12 +4,56 @@ import { categories as initialCategories } from '@/data/categories';
 import { products as initialProducts } from '@/data/products';
 import { catalogApi } from '@/services/api';
 
-const normaliseProduct = (item: any): Product => ({ ...item, id: item.id, name: item.name || item.title, category: item.category?.name || item.category || 'Fresh Produce', categoryId: item.categoryId || item.category?.id || '', price: Number(item.price || 0), originalPrice: Number(item.originalPrice || item.price || 0), discountPercentage: item.discountPercentage || 0, rating: item.rating || 0, reviewsCount: item.reviewsCount || 0, badge: item.badge || 'Farm Fresh', inStock: item.inStock ?? item.status === 'ACTIVE', image: item.image || item.images?.[0]?.url || '/images/tomatoes.png', thumbnails: item.thumbnails || [], description: item.description || '', weights: item.weights || ['1kg'], healthBenefits: item.healthBenefits || [], nutrition: item.nutrition || {}, reviews: item.reviews || [], isAdded: item.isAdded ?? true });
+const normaliseProduct = (item: any): Product => {
+  const listings = (item.variants || []).flatMap((variant: any) => variant.vendorProducts || []);
+  const cheapestListing = listings.reduce((lowest: any, listing: any) =>
+    !lowest || Number(listing.price) < Number(lowest.price) ? listing : lowest, null);
+  // Backend monetary values are stored in paise; the storefront displays INR.
+  const price = cheapestListing ? Number(cheapestListing.price) / 100 : Number(item.price || 0);
+  const originalPrice = cheapestListing?.compareAtPrice
+    ? Number(cheapestListing.compareAtPrice) / 100
+    : Number(item.originalPrice || price);
+  const weights = (item.variants || []).map((variant: any) => variant.name).filter(Boolean);
+  const availableQuantity = cheapestListing?.inventory?.quantity;
+
+  return {
+    ...item,
+    id: item.id,
+    name: item.name || item.title,
+    category: item.category?.name || item.category || 'Fresh Produce',
+    categoryId: item.categoryId || item.category?.id || '',
+    price,
+    originalPrice,
+    discountPercentage: originalPrice > price ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0,
+    rating: item.rating || 0,
+    reviewsCount: item.reviewsCount || 0,
+    badge: item.badge || 'Farm Fresh',
+    inStock: item.inStock ?? (item.status === 'ACTIVE' && (!cheapestListing || Number(availableQuantity) > 0)),
+    image: item.image || item.images?.[0]?.url || '/images/tomatoes.png',
+    thumbnails: item.thumbnails || item.images?.map((image: any) => image.url) || [],
+    description: item.description || '',
+    weights: weights.length ? weights : ['1kg'],
+    healthBenefits: item.healthBenefits || [],
+    nutrition: item.nutrition || {},
+    reviews: item.reviews || [],
+    isAdded: item.isAdded ?? true,
+  };
+};
+
+const normaliseCategory = (item: any): Category => ({
+  id: item.id,
+  name: item.name,
+  slug: item.slug,
+  description: item.description || '',
+  image: item.image || '/images/carrots.png',
+  icon: item.icon || 'Leaf',
+  productCount: item._count?.products || item.productCount || 0,
+});
 
 export const fetchCatalog = createAsyncThunk('catalog/fetch', async (_, { rejectWithValue }) => {
   const [products, categories] = await Promise.all([catalogApi.getProducts(), catalogApi.getCategories()]);
   if (!products.success) return rejectWithValue(products.message || 'Catalog could not be loaded');
-  return { products: (products.data || []).map(normaliseProduct), categories: (categories.data || []) as Category[] };
+  return { products: (products.data || []).map(normaliseProduct), categories: (categories.data || []).map(normaliseCategory) };
 });
 
 const catalogSlice = createSlice({ name: 'catalog', initialState: { products: initialProducts as Product[], categories: initialCategories as Category[], loading: false, error: null as string | null, isRemote: false }, reducers: {

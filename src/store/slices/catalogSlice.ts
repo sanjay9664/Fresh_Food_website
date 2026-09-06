@@ -7,7 +7,9 @@ import { catalogApi } from '@/services/api';
 const normaliseProduct = (item: any): Product => ({ ...item, id: item.id, name: item.name || item.title, category: item.category?.name || item.category || 'Fresh Produce', categoryId: item.categoryId || item.category?.id || '', price: Number(item.price || 0), originalPrice: Number(item.originalPrice || item.price || 0), discountPercentage: item.discountPercentage || 0, rating: item.rating || 0, reviewsCount: item.reviewsCount || 0, badge: item.badge || 'Farm Fresh', inStock: item.inStock ?? item.status === 'ACTIVE', image: item.image || item.images?.[0]?.url || '/images/tomatoes.png', thumbnails: item.thumbnails || [], description: item.description || '', weights: item.weights || ['1kg'], healthBenefits: item.healthBenefits || [], nutrition: item.nutrition || {}, reviews: item.reviews || [], isAdded: item.isAdded ?? true });
 
 export const fetchCatalog = createAsyncThunk('catalog/fetch', async (_, { rejectWithValue }) => {
-  const [products, categories] = await Promise.all([catalogApi.getProducts(), catalogApi.getCategories()]);
+  const [pubProducts, pubCategories] = await Promise.all([catalogApi.getPublicProducts(), catalogApi.getPublicCategories()]);
+  const products = pubProducts.success ? pubProducts : await catalogApi.getProducts();
+  const categories = pubCategories.success ? pubCategories : await catalogApi.getCategories();
   if (!products.success) return rejectWithValue(products.message || 'Catalog could not be loaded');
   return { products: (products.data || []).map(normaliseProduct), categories: (categories.data || []) as Category[] };
 });

@@ -168,7 +168,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: true };
     }
 
-    // 2. Seamless Fallback for Demo Users / Offline mode if backend server is not active
+    const isNetworkError =
+      res.message?.includes('Unable to connect') ||
+      res.message?.includes('Failed to fetch') ||
+      res.message?.includes('NetworkError');
+
+    // 2. If backend responded with an HTTP/auth error (e.g. invalid credentials), reject login immediately!
+    if (!isNetworkError) {
+      setLoading(false);
+      return {
+        success: false,
+        message: res.message || 'Invalid email/phone or password.',
+      };
+    }
+
+    // 3. Fallback ONLY for Demo accounts when backend server is offline (Strict password check)
     const cleanLower = cleanId.toLowerCase();
     const existing = DEFAULT_USERS.find(
       (u) =>
@@ -177,13 +191,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         (cleanLower === 'admin' && u.role === 'admin')
     );
 
-    if (existing || res.message?.includes('connect') || res.message?.includes('HTTP error') || res.message?.includes('Failed to fetch')) {
-      const displayName = customName && customName.trim() ? customName.trim() : existing?.name || cleanId.split('@')[0];
+    if (existing) {
+      if (existing.password && existing.password !== inputPass) {
+        setLoading(false);
+        return { success: false, message: 'Invalid password for demo account.' };
+      }
+
+      const displayName = customName && customName.trim() ? customName.trim() : existing.name;
       const authUser: UserProfile = {
-        email: existing?.email || (cleanId.includes('@') ? cleanId : `${cleanId}@freshvana.com`),
+        email: existing.email,
         name: displayName,
-        role: existing?.role || targetRole,
-        phone: existing?.phone || (!cleanId.includes('@') ? cleanId : undefined),
+        role: existing.role || targetRole,
+        phone: existing.phone,
       };
 
       setIsLoggedIn(true);
@@ -202,7 +221,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(false);
     return {
       success: false,
-      message: res.message || 'Login failed. Please check your credentials.',
+      message: res.message || 'Backend server offline. Please start the backend server at http://localhost:4000.',
     };
   };
 
@@ -274,7 +293,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
 
-    // Fallback registration for client demo mode
+    const isNetworkError =
+      res.message?.includes('Unable to connect') ||
+      res.message?.includes('Failed to fetch') ||
+      res.message?.includes('NetworkError');
+
+    if (!isNetworkError) {
+      setLoading(false);
+      return { success: false, message: res.message || 'Registration failed.' };
+    }
+
+    // Fallback registration for client demo mode when backend is offline
     const authUser: UserProfile = {
       email,
       name: cleanName,

@@ -38,23 +38,6 @@ interface AuthContextType {
   registeredUsers: UserAccount[];
 }
 
-const DEFAULT_USERS: UserAccount[] = [
-  {
-    email: 'admin@freshvana.com',
-    phone: '8707375679',
-    name: 'Super Admin (Sanjay)',
-    password: 'password123',
-    role: 'admin',
-  },
-  {
-    email: 'sanjay@freshvana.com',
-    phone: '9876543210',
-    name: 'Sanjay Kumar',
-    password: 'password123',
-    role: 'admin',
-  },
-];
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -88,21 +71,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
 
-      // Restore session from localStorage fallback if available
-      const savedAuth = localStorage.getItem('freshvana_auth');
-      if (savedAuth) {
-        try {
-          const parsed = JSON.parse(savedAuth);
-          if (parsed.isLoggedIn && parsed.user) {
-            setIsLoggedIn(true);
-            setUser(parsed.user);
-            setLoading(false);
-            return;
-          }
-        } catch (e) {
-          console.error('Failed to parse local auth', e);
-        }
-      }
+      // A local profile is only a cache, never proof of authentication.
+      clearTokens();
+      localStorage.removeItem('freshvana_auth');
       setIsLoggedIn(false);
       setUser(null);
       setLoading(false);
@@ -114,8 +85,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (
     identifier: string,
     password?: string,
-    targetRole: 'customer' | 'admin' = 'customer',
-    customName?: string
+    _targetRole: 'customer' | 'admin' = 'customer',
+    _customName?: string
   ): Promise<{ success: boolean; message?: string }> => {
     setLoading(true);
     const cleanId = identifier.trim();
@@ -140,10 +111,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { user: backendUser, accessToken, refreshToken } = res.data;
       setTokens(accessToken, refreshToken);
 
-      const displayName =
-        customName && customName.trim()
-          ? customName.trim()
-          : `${backendUser.firstName || ''} ${backendUser.lastName || ''}`.trim() || backendUser.email;
+      const displayName = `${backendUser.firstName || ''} ${backendUser.lastName || ''}`.trim() || backendUser.email;
 
       const authUser: UserProfile = {
         id: backendUser.id,
@@ -151,7 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         name: displayName,
         firstName: backendUser.firstName,
         lastName: backendUser.lastName,
-        role: backendUser.role || targetRole,
+        role: backendUser.role || 'CUSTOMER',
         phone: backendUser.phone,
       };
 
@@ -229,7 +197,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     name: string,
     emailOrPhone: string,
     password?: string,
-    role: 'customer' | 'admin' = 'customer'
+    _role: 'customer' | 'admin' = 'customer'
   ): Promise<{ success: boolean; message?: string }> => {
     setLoading(true);
     const cleanId = emailOrPhone.trim();
@@ -259,38 +227,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     if (res.success) {
-      // Backend signup succeeded. Now auto-login to obtain JWT tokens.
-      const loginRes = await authApi.login({
-        emailOrPhone: email,
-        password: cleanPass,
-      });
-
-      if (loginRes.success && loginRes.data && loginRes.data.accessToken) {
-        const { user: backendUser, accessToken, refreshToken } = loginRes.data;
-        setTokens(accessToken, refreshToken);
-
-        const authUser: UserProfile = {
-          id: backendUser.id,
-          email: backendUser.email,
-          name: `${backendUser.firstName || ''} ${backendUser.lastName || ''}`.trim(),
-          firstName: backendUser.firstName,
-          lastName: backendUser.lastName,
-          role: backendUser.role || role,
-          phone: backendUser.phone,
-        };
-
-        setIsLoggedIn(true);
-        setUser(authUser);
-        localStorage.setItem('freshvana_auth', JSON.stringify({ isLoggedIn: true, user: authUser }));
-        setLoading(false);
-
-        if (authUser.role?.toLowerCase().includes('admin') || role === 'admin') {
-          router.push('/admin');
-        } else {
-          router.push('/');
-        }
-        return { success: true };
-      }
+      setLoading(false);
+      return { success: true, message: 'Account created. Please verify your email before signing in.' };
     }
 
     const isNetworkError =
@@ -315,13 +253,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(authUser);
     localStorage.setItem('freshvana_auth', JSON.stringify({ isLoggedIn: true, user: authUser }));
     setLoading(false);
-
-    if (authUser.role?.toLowerCase().includes('admin') || role === 'admin') {
-      router.push('/admin');
-    } else {
-      router.push('/');
-    }
-    return { success: true };
+    return { success: false, message: res.message || 'Unable to create your account.' };
   };
 
   const logout = async () => {
@@ -345,7 +277,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         register,
         logout,
-        registeredUsers: DEFAULT_USERS,
+        registeredUsers: [],
       }}
     >
       {children}

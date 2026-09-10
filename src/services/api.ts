@@ -87,6 +87,26 @@ export async function apiRequest<T = any>(
 
     const data = await response.json().catch(() => null);
 
+    // Refresh once for an expired access token. The original request is then
+    // repeated with the new token; a failed refresh never creates a session.
+    if (response.status === 401 && requiresAuth && !hasRetriedAfterRefresh && endpoint !== '/auth/refresh') {
+      const refreshToken = getRefreshToken();
+      if (refreshToken) {
+        const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken }),
+        });
+        const refreshBody = await refreshResponse.json().catch(() => null);
+        const refreshed = refreshBody?.data ?? refreshBody;
+        if (refreshResponse.ok && refreshed?.accessToken) {
+          setTokens(refreshed.accessToken, refreshed.refreshToken);
+          return apiRequest<T>(endpoint, options, true);
+        }
+      }
+      clearTokens();
+    }
+
     if (!response.ok) {
       const errorMessage =
         data?.message || data?.error?.message || data?.error || `HTTP error! Status: ${response.status}`;
@@ -406,28 +426,13 @@ export const vendorApi = {
 // CART API
 // =============================================================================
 export const cartApi = {
-  getCart: () => apiRequest<CartResponse>('/api/v1/cart', { method: 'GET', requiresAuth: true }),
+  getCart: () => apiRequest('/cart', { method: 'GET', requiresAuth: true }),
   addItem: (vendorProductId: string, quantity: number) =>
-    apiRequest<CartResponse>('/api/v1/cart/items', {
-      method: 'POST',
-      body: JSON.stringify({ vendorProductId, quantity }),
-      requiresAuth: true,
-    }),
+    apiRequest('/cart/items', { method: 'POST', body: JSON.stringify({ vendorProductId, quantity }), requiresAuth: true }),
   updateItem: (itemId: string, quantity: number) =>
-    apiRequest<CartResponse>(`/api/v1/cart/items/${itemId}`, {
-      method: 'PUT',
-      body: JSON.stringify({ quantity }),
-      requiresAuth: true,
-    }),
-  removeItem: (itemId: string) =>
-    apiRequest<CartResponse>(`/api/v1/cart/items/${itemId}`, { method: 'DELETE', requiresAuth: true }),
-  clearCart: () => apiRequest<CartResponse>('/api/v1/cart', { method: 'DELETE', requiresAuth: true }),
-  syncCart: (cartItems: any[], deliverySlot?: any) =>
-    apiRequest('/api/v1/cart/sync', {
-      method: 'POST',
-      body: JSON.stringify({ items: cartItems, deliverySlot }),
-      requiresAuth: true,
-    }),
+    apiRequest(`/cart/items/${itemId}`, { method: 'PUT', body: JSON.stringify({ quantity }), requiresAuth: true }),
+  removeItem: (itemId: string) => apiRequest(`/cart/items/${itemId}`, { method: 'DELETE', requiresAuth: true }),
+  clear: () => apiRequest('/cart', { method: 'DELETE', requiresAuth: true }),
 };
 
 // =============================================================================

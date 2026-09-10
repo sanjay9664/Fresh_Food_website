@@ -8,7 +8,6 @@ import {
   Mail,
   Lock,
   Leaf,
-  ShieldAlert,
   ArrowRight,
   AlertCircle,
   Eye,
@@ -22,7 +21,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 export default function LoginPage() {
   const { login, register } = useAuth();
   const [isRegister, setIsRegister] = useState(false);
-  const [isAdminMode, setIsAdminMode] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -34,30 +32,14 @@ export default function LoginPage() {
     password: ''
   });
 
-  // Quick autofills
-  const handleQuickFillCustomer = () => {
-    setIsAdminMode(false);
-    setIsRegister(false);
-    setErrorMessage(null);
-    setSuccessMessage(null);
-    setFormData({
-      name: 'Sanjay Kumar',
-      emailOrPhone: 'sanjay@freshvana.com',
-      password: 'password123'
-    });
-  };
-
-  const handleQuickFillAdmin = () => {
-    setIsAdminMode(true);
-    setIsRegister(false);
-    setErrorMessage(null);
-    setSuccessMessage(null);
-    setFormData({
-      name: 'Super Admin',
-      emailOrPhone: 'admin@freshvana.com',
-      password: 'password123'
-    });
-  };
+  // These controls only fill the form; login is still validated exclusively
+  // by the backend and no browser-side demo account exists.
+  const handleQuickFillCustomer = () => setFormData({
+    name: '', emailOrPhone: 'sanjay@freshvana.com', password: 'password123'
+  });
+  const handleQuickFillAdmin = () => setFormData({
+    name: '', emailOrPhone: 'admin@freshvana.com', password: 'password123'
+  });
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,28 +47,25 @@ export default function LoginPage() {
     setSuccessMessage(null);
     setIsSubmitting(true);
 
-    const targetRole = isAdminMode ? 'admin' : 'customer';
-
     try {
       if (isRegister) {
         const res = await register(
           formData.name || 'User',
           formData.emailOrPhone,
           formData.password,
-          targetRole
+          'customer'
         );
 
         if (!res.success && res.message) {
           setErrorMessage(res.message);
         } else if (res.success) {
-          setSuccessMessage('Account created successfully!');
+          setSuccessMessage(res.message || 'Account created successfully! Please verify your email before signing in.');
         }
       } else {
         const res = await login(
           formData.emailOrPhone,
           formData.password,
-          targetRole,
-          formData.name
+          'customer'
         );
 
         if (!res.success && res.message) {
@@ -173,21 +152,17 @@ export default function LoginPage() {
               style={{
                 width: '56px',
                 height: '56px',
-                background: isAdminMode
-                  ? 'linear-gradient(135deg, #111827, #374151)'
-                  : 'linear-gradient(135deg, #0A6836, #10B981)'
+                background: 'linear-gradient(135deg, #0A6836, #10B981)'
               }}
             >
-              {isAdminMode ? <ShieldAlert size={28} /> : <Leaf size={28} />}
+              <Leaf size={28} />
             </div>
 
             <h3 className="fw-bold text-dark mb-1 fs-4">
-              {isAdminMode ? 'Admin Portal' : isRegister ? 'Create Account' : 'Welcome Back'}
+              {isRegister ? 'Create Account' : 'Welcome Back'}
             </h3>
             <p className="text-muted small mb-0">
-              {isAdminMode
-                ? 'Sign in with super admin privileges'
-                : isRegister
+              {isRegister
                 ? 'Sign up to order fresh organic produce'
                 : 'Sign in to access your FreshVana account'}
             </p>
@@ -339,7 +314,7 @@ export default function LoginPage() {
               type="submit"
               disabled={isSubmitting}
               className="btn btn-success btn-lg rounded-pill w-100 py-2.5 fw-bold shadow-sm border-0 text-white d-flex align-items-center justify-content-center gap-2"
-              style={{ background: isAdminMode ? '#111827' : '#0A6836' }}
+              style={{ background: '#0A6836' }}
             >
               {isSubmitting ? (
                 <>
@@ -348,7 +323,7 @@ export default function LoginPage() {
                 </>
               ) : (
                 <>
-                  <span>{isRegister ? 'Create Account' : isAdminMode ? 'Admin Sign In' : 'Sign In'}</span>
+                  <span>{isRegister ? 'Create Account' : 'Sign In'}</span>
                   <ArrowRight size={18} />
                 </>
               )}

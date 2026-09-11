@@ -38,6 +38,30 @@ interface AuthContextType {
   registeredUsers: UserAccount[];
 }
 
+const DEFAULT_USERS: UserAccount[] = [
+  {
+    email: 'admin@freshvana.com',
+    phone: '8707375679',
+    name: 'Super Admin (Sanjay)',
+    password: 'password123',
+    role: 'admin',
+  },
+  {
+    email: 'sanjay@freshvana.com',
+    phone: '9876543210',
+    name: 'Sanjay Kumar',
+    password: 'password123',
+    role: 'admin',
+  },
+  {
+    email: 'vendoruser@marketplace.com',
+    phone: '9876543211',
+    name: 'Green Harvest Organic Farm',
+    password: 'Vendor123!',
+    role: 'vendor',
+  },
+];
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -127,7 +151,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { user: backendUser, accessToken, refreshToken } = res.data;
       setTokens(accessToken, refreshToken);
 
-      const displayName = `${backendUser.firstName || ''} ${backendUser.lastName || ''}`.trim() || backendUser.email;
+      const displayName =
+        customName && customName.trim()
+          ? customName.trim()
+          : `${backendUser.firstName || ''} ${backendUser.lastName || ''}`.trim() || backendUser.email;
 
       const authUser: UserProfile = {
         id: backendUser.id,
@@ -145,7 +172,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
 
       const roleStr = String(authUser.role).toLowerCase();
-      if (roleStr.includes('admin')) {
+      if (roleStr.includes('admin') || targetRole === 'admin') {
+        router.push('/admin');
+      } else if (roleStr.includes('vendor') || targetRole === 'vendor') {
+        router.push('/vendor/dashboard');
+      } else {
+        router.push('/');
+      }
+      return { success: true };
+    }
+
+    const isNetworkError =
+      res.message?.includes('Unable to connect') ||
+      res.message?.includes('Failed to fetch') ||
+      res.message?.includes('NetworkError');
+
+    // 2. If backend responded with an HTTP/auth error (e.g. invalid credentials), reject login immediately!
+    if (!isNetworkError) {
+      setLoading(false);
+      return {
+        success: false,
+        message: res.message || 'Invalid email/phone or password.',
+      };
+    }
+
+    // 3. Fallback ONLY for Demo accounts when backend server is offline (Strict password check)
+    const cleanLower = cleanId.toLowerCase();
+    const existing = DEFAULT_USERS.find(
+      (u) =>
+        u.email.toLowerCase() === cleanLower ||
+        (u.phone && u.phone.trim() === cleanLower) ||
+        (cleanLower === 'admin' && u.role === 'admin')
+    );
+
+    if (existing) {
+      if (existing.password && existing.password !== inputPass) {
+        setLoading(false);
+        return { success: false, message: 'Invalid password for demo account.' };
+      }
+
+      const displayName = customName && customName.trim() ? customName.trim() : existing.name;
+      const authUser: UserProfile = {
+        email: existing.email,
+        name: displayName,
+        role: existing.role || targetRole,
+        phone: existing.phone,
+      };
+
+      setIsLoggedIn(true);
+      setUser(authUser);
+      localStorage.setItem('freshvana_auth', JSON.stringify({ isLoggedIn: true, user: authUser }));
+      setLoading(false);
+
+      const roleStr = String(authUser.role).toLowerCase();
+      if (roleStr.includes('admin') || targetRole === 'admin') {
         router.push('/admin');
       } else if (roleStr.includes('vendor') || targetRole === 'vendor') {
         router.push('/vendor/dashboard');
@@ -166,7 +246,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     name: string,
     emailOrPhone: string,
     password?: string,
-    _role: 'customer' | 'admin' | 'vendor' = 'customer'
+    role: 'customer' | 'admin' | 'vendor' = 'customer'
   ): Promise<{ success: boolean; message?: string }> => {
     setLoading(true);
     const cleanId = emailOrPhone.trim();
@@ -200,8 +280,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: true, message: 'Account created. Please verify your email before signing in.' };
     }
 
+    const isNetworkError =
+      res.message?.includes('Unable to connect') ||
+      res.message?.includes('Failed to fetch') ||
+      res.message?.includes('NetworkError');
+
+    if (!isNetworkError) {
+      setLoading(false);
+      return { success: false, message: res.message || 'Registration failed.' };
+    }
+
+    // Fallback registration for client demo mode when backend is offline
+    const authUser: UserProfile = {
+      email,
+      name: cleanName,
+      role: role,
+      phone,
+    };
+
+    setIsLoggedIn(true);
+    setUser(authUser);
+    localStorage.setItem('freshvana_auth', JSON.stringify({ isLoggedIn: true, user: authUser }));
     setLoading(false);
-    return { success: false, message: res.message || 'Unable to create your account.' };
+
+    const roleStr = String(authUser.role).toLowerCase();
+    if (roleStr.includes('admin') || role === 'admin') {
+      router.push('/admin');
+    } else if (roleStr.includes('vendor') || role === 'vendor') {
+      router.push('/vendor/dashboard');
+    } else {
+      router.push('/');
+    }
+    return { success: true };
   };
 
   const logout = async () => {
@@ -225,7 +335,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         register,
         logout,
-        registeredUsers: [],
+        registeredUsers: DEFAULT_USERS,
       }}
     >
       {children}

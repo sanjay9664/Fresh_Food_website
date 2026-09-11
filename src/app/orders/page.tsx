@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { Order, OrderStatus } from '@/types';
+import { ordersApi } from '@/services/api';
 import {
   ShoppingBag,
   Clock,
@@ -146,29 +147,37 @@ export default function OrdersPage() {
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
 
   useEffect(() => {
-    // Load customer saved orders from localStorage
-    const saved = localStorage.getItem('freshvana_customer_orders');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          // Combine stored orders with default mock orders without duplicates
-          const combined = [...parsed];
-          MOCK_ORDERS.forEach((m) => {
-            if (!combined.some((c) => c.orderNumber === m.orderNumber)) {
-              combined.push(m);
+    const fetchCustomerOrders = async () => {
+      const apiRes = await ordersApi.getCustomerOrders();
+      let baseOrders: Order[] = MOCK_ORDERS;
+
+      if (apiRes.success && Array.isArray(apiRes.data) && apiRes.data.length > 0) {
+        baseOrders = apiRes.data;
+      } else {
+        const saved = localStorage.getItem('freshvana_customer_orders');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              const combined = [...parsed];
+              MOCK_ORDERS.forEach((m) => {
+                if (!combined.some((c) => c.orderNumber === m.orderNumber)) {
+                  combined.push(m);
+                }
+              });
+              baseOrders = combined;
             }
-          });
-          setOrders(combined);
-          setSelectedOrder(combined[0]);
-          return;
+          } catch (err) {
+            console.error('Error loading saved orders:', err);
+          }
         }
-      } catch (err) {
-        console.error('Error loading saved orders:', err);
       }
-    }
-    setOrders(MOCK_ORDERS);
-    setSelectedOrder(MOCK_ORDERS[0]);
+
+      setOrders(baseOrders);
+      setSelectedOrder(baseOrders[0] || null);
+    };
+
+    fetchCustomerOrders();
   }, []);
 
   const handleReorder = (order: Order) => {

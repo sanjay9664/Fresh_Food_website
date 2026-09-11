@@ -160,3 +160,115 @@ export interface Coupon {
   badge: string;
   expiryDate: string;
 }
+
+export interface Vendor {
+  id: string;
+  businessName: string;
+  legalName?: string;
+  email: string;
+  phone: string;
+  status: 'PENDING' | 'ACTIVE' | 'REJECTED' | 'SUSPENDED' | 'INACTIVE';
+  commissionRate?: number;
+  rating?: number;
+}
+
+export interface ProductVariant {
+  id: string;
+  productId: string;
+  sku: string;
+  name: string;
+  weightQuantity: number;
+  weightUnit: string;
+  basePricePaise?: number;
+}
+
+export interface ProductImage {
+  id: string;
+  productId: string;
+  url: string;
+  isPrimary: boolean;
+  sortOrder: number;
+}
+
+export interface VendorProduct {
+  id: string;
+  vendorId: string;
+  variantId: string;
+  pricePaise: number;
+  compareAtPricePaise?: number;
+  isActive: boolean;
+  stockQuantity?: number;
+}
+
+export interface Inventory {
+  id: string;
+  vendorProductId: string;
+  availableQuantity: number;
+  reservedQuantity: number;
+  lowStockThreshold: number;
+}
+
+export interface DeliveryZone {
+  id: string;
+  name: string;
+  postalCode: string;
+  deliveryFeePaise: number;
+  freeDeliveryThresholdPaise: number;
+  isActive: boolean;
+}
+
+export interface DeliverySlotAvailability {
+  slotId: string;
+  startTime: string;
+  endTime: string;
+  totalCapacity: number;
+  bookedCapacity: number;
+  availableCapacity: number;
+  isAvailable: boolean;
+}
+
+export interface AdminRole {
+  id: string;
+  name: string;
+  description?: string;
+  permissions: string[];
+}
+
+export interface Permission {
+  code: string;
+  name: string;
+  module: string;
+  description?: string;
+}
+
+export interface Referral {
+  id: string;
+  referrerUserId: string;
+  refereeUserId: string;
+  referralCode: string;
+  status: 'PENDING' | 'GRANTED' | 'EXPIRED';
+  rewardAmountPaise: number;
+}
+
+export interface CartResponse {
+  id: string;
+  userId: string;
+  items: Array<{
+    id: string;
+    vendorProductId: string;
+    quantity: number;
+    pricePaise: number;
+    title?: string;
+    variantName?: string;
+  }>;
+  subtotalPaise: number;
+}
+
+export interface CheckoutResponse {
+  orderId: string;
+  orderNumber: string;
+  totalAmountPaise: number;
+  paymentStatus: string;
+  message?: string;
+}
+

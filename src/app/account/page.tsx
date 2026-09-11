@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { SavedAddress } from '@/types';
+import { usersApi } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
 import {
   User,
   MapPin,
@@ -52,15 +54,16 @@ const DEFAULT_ADDRESSES: SavedAddress[] = [
 ];
 
 export default function AccountPage() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'profile' | 'addresses' | 'wallet'>('profile');
   const [addresses, setAddresses] = useState<SavedAddress[]>(DEFAULT_ADDRESSES);
   const [isAddingAddress, setIsAddingAddress] = useState(false);
   const [copiedReferral, setCopiedReferral] = useState(false);
 
   const [newAddr, setNewAddr] = useState<Omit<SavedAddress, 'id'>>({
-    fullName: 'Aarav Sharma',
-    mobile: '98765 43210',
-    email: 'aarav@example.com',
+    fullName: user?.name || 'Aarav Sharma',
+    mobile: user?.phone || '98765 43210',
+    email: user?.email || 'aarav@example.com',
     address: '',
     landmark: '',
     city: 'Bengaluru',
@@ -71,15 +74,24 @@ export default function AccountPage() {
   });
 
   useEffect(() => {
-    const saved = localStorage.getItem('freshvana_saved_addresses');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) setAddresses(parsed);
-      } catch (e) {
-        // Ignore
+    const fetchRemoteAddresses = async () => {
+      const res = await usersApi.getAddresses();
+      if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+        setAddresses(res.data);
+        localStorage.setItem('freshvana_saved_addresses', JSON.stringify(res.data));
+        return;
       }
-    }
+      const saved = localStorage.getItem('freshvana_saved_addresses');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) setAddresses(parsed);
+        } catch (e) {
+          // Ignore
+        }
+      }
+    };
+    fetchRemoteAddresses();
   }, []);
 
   const saveAddressesToStorage = (updated: SavedAddress[]) => {
@@ -87,22 +99,24 @@ export default function AccountPage() {
     localStorage.setItem('freshvana_saved_addresses', JSON.stringify(updated));
   };
 
-  const handleAddAddress = (e: React.FormEvent) => {
+  const handleAddAddress = async (e: React.FormEvent) => {
     e.preventDefault();
     const created: SavedAddress = {
       ...newAddr,
       id: `addr-${Date.now()}`
     };
-    let updated = [created, ...addresses];
-    if (created.isDefault) {
-      updated = updated.map(a => ({ ...a, isDefault: a.id === created.id }));
+    const res = await usersApi.createAddress(newAddr);
+    const addressItem = (res.success && res.data) ? res.data : created;
+    let updated = [addressItem, ...addresses];
+    if (addressItem.isDefault) {
+      updated = updated.map(a => ({ ...a, isDefault: a.id === addressItem.id }));
     }
     saveAddressesToStorage(updated);
     setIsAddingAddress(false);
     setNewAddr({
-      fullName: 'Aarav Sharma',
-      mobile: '98765 43210',
-      email: 'aarav@example.com',
+      fullName: user?.name || 'Aarav Sharma',
+      mobile: user?.phone || '98765 43210',
+      email: user?.email || 'aarav@example.com',
       address: '',
       landmark: '',
       city: 'Bengaluru',
@@ -113,12 +127,14 @@ export default function AccountPage() {
     });
   };
 
-  const handleDeleteAddress = (id: string) => {
+  const handleDeleteAddress = async (id: string) => {
+    await usersApi.deleteAddress(id).catch(() => null);
     const updated = addresses.filter(a => a.id !== id);
     saveAddressesToStorage(updated);
   };
 
-  const handleSetDefault = (id: string) => {
+  const handleSetDefault = async (id: string) => {
+    await usersApi.setDefaultAddress(id).catch(() => null);
     const updated = addresses.map(a => ({ ...a, isDefault: a.id === id }));
     saveAddressesToStorage(updated);
   };

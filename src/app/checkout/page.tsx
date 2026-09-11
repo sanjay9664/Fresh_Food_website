@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
+import { checkoutApi, deliveryApi } from '@/services/api';
 import confetti from 'canvas-confetti';
 import {
   MapPin,
@@ -66,6 +67,12 @@ export default function CheckoutPage() {
   const [orderId, setOrderId] = useState<string>('');
   const [whatsappMsg, setWhatsappMsg] = useState<string>('');
 
+  useEffect(() => {
+    if (addressForm.pincode && addressForm.pincode.length === 6) {
+      deliveryApi.getZonesByPincode(addressForm.pincode).catch(() => null);
+    }
+  }, [addressForm.pincode]);
+
   const sendOrderToWhatsApp = (msgText?: string) => {
     const textToSend = msgText || whatsappMsg;
     if (!textToSend) return;
@@ -74,12 +81,25 @@ export default function CheckoutPage() {
     window.open(`https://api.whatsapp.com/send?phone=${targetNumber}&text=${encoded}`, '_blank');
   };
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Place Order Step
-      const newOrderId = `FV-${Math.floor(10000 + Math.random() * 90000)}`;
+      // Process checkout API request
+      const checkoutPayload = {
+        address: addressForm,
+        deliverySlot: { date: deliveryDate, slot: deliverySlot },
+        paymentMethod,
+        items: cart.map((i) => ({ productId: i.product.id, quantity: i.quantity, weight: i.selectedWeight })),
+        couponCode: couponCode || undefined,
+        totalAmount,
+      };
+
+      const apiRes = await checkoutApi.processCheckout(checkoutPayload, `idemp-${Date.now()}`);
+      const newOrderId = (apiRes.success && apiRes.data?.orderNumber)
+        ? apiRes.data.orderNumber
+        : `FV-${Math.floor(10000 + Math.random() * 90000)}`;
+
       setOrderId(newOrderId);
 
       // Construct WhatsApp Order details message
@@ -165,10 +185,8 @@ Thank you for your organic order! 🍎🥦`;
         console.error('Failed to save order to localStorage', e);
       }
 
-      // Automatically launch WhatsApp link for 8707375679
       sendOrderToWhatsApp(messageText);
 
-      // Trigger Confetti Celebration!
       try {
         confetti({
           particleCount: 120,

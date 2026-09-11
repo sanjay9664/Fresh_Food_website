@@ -52,7 +52,9 @@ const normaliseCategory = (item: any): Category => ({
 });
 
 export const fetchCatalog = createAsyncThunk('catalog/fetch', async (_, { rejectWithValue }) => {
-  const [products, categories] = await Promise.all([catalogApi.getProducts(), catalogApi.getCategories()]);
+  const [pubProducts, pubCategories] = await Promise.all([catalogApi.getPublicProducts(), catalogApi.getPublicCategories()]);
+  const products = pubProducts.success ? pubProducts : await catalogApi.getProducts();
+  const categories = pubCategories.success ? pubCategories : await catalogApi.getCategories();
   if (!products.success) return rejectWithValue(products.message || 'Catalog could not be loaded');
   return { products: (products.data || []).map(normaliseProduct), categories: (categories.data || []).map(normaliseCategory) };
 });

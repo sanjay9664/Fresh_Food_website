@@ -1,13 +1,23 @@
 'use client';
 
 import { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import type { Category, Product } from '@/types';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { addLocalCategory, addLocalProduct, fetchCatalog, removeLocalCategory, removeLocalProduct, resetCatalog, toggleLocalStock, toggleLocalVisibility } from '@/store/slices/catalogSlice';
 
 export function ProductProvider({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
-  useEffect(() => { dispatch(fetchCatalog()); }, [dispatch]);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    // Skip catalog requests on isolated vendor, admin, and login routes
+    if (pathname?.startsWith('/vendor') || pathname?.startsWith('/admin') || pathname === '/login') {
+      return;
+    }
+    dispatch(fetchCatalog());
+  }, [dispatch, pathname]);
+
   return <>{children}</>;
 }
 

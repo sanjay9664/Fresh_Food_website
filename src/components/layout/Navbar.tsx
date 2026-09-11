@@ -27,7 +27,8 @@ import {
   Info,
   PhoneCall,
   PackageCheck,
-  MapPin
+  MapPin,
+  Store
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -340,6 +341,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
                     >
                       <User size={17} className="text-primary" />
                       <span>👤 My Profile & Addresses</span>
+                    </Link>
+
+                    <Link
+                      href="/vendor"
+                      onClick={() => setProfileDropdownOpen(false)}
+                      className="dropdown-item rounded-3 py-2 px-3 small fw-semibold text-dark d-flex align-items-center gap-2 mb-1"
+                      style={{ backgroundColor: '#f0fdf4' }}
+                    >
+                      <Store size={17} className="text-success" />
+                      <span>🌾 Vendor Partner Portal</span>
                     </Link>
 
                     {isLoggedIn && user?.role?.toLowerCase().includes('admin') && (

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import {
   User,
@@ -330,9 +331,9 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Minimal Quick Demo Autofills Footer */}
+          {/* Minimal Quick Demo Autofills & Vendor Portal Banner */}
           <div className="mt-4 pt-3 border-top text-center">
-            <div className="d-flex align-items-center justify-content-center gap-2 extra-small text-muted mb-2">
+            <div className="d-flex align-items-center justify-content-center gap-2 extra-small text-muted mb-3">
               <Key size={13} className="text-success" />
               <span>Quick Demo Fill:</span>
               <button
@@ -350,6 +351,24 @@ export default function LoginPage() {
               >
                 Admin
               </button>
+            </div>
+
+            {/* Vendor Partner Dedicated Portal Prompt */}
+            <div 
+              className="p-2.5 rounded-3 border text-start d-flex align-items-center justify-content-between"
+              style={{ backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }}
+            >
+              <div>
+                <div className="fw-bold text-success" style={{ fontSize: '0.8rem' }}>Are you a Farmer or Supplier?</div>
+                <div className="text-muted" style={{ fontSize: '0.725rem' }}>Sell produce directly on FreshVana Partner Hub</div>
+              </div>
+              <Link 
+                href="/vendor/login" 
+                className="btn btn-sm btn-success text-white fw-semibold rounded-pill px-3 py-1 text-decoration-none"
+                style={{ fontSize: '0.75rem', whiteSpace: 'nowrap' }}
+              >
+                Vendor Login
+              </Link>
             </div>
           </div>
         </motion.div>

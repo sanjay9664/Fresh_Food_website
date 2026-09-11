@@ -8,7 +8,7 @@ export interface UserProfile {
   id?: string;
   email: string;
   name: string;
-  role: 'customer' | 'admin' | string;
+  role: 'customer' | 'admin' | 'vendor' | string;
   phone?: string;
   firstName?: string;
   lastName?: string;
@@ -25,14 +25,14 @@ interface AuthContextType {
   login: (
     identifier: string,
     password?: string,
-    targetRole?: 'customer' | 'admin',
+    targetRole?: 'customer' | 'admin' | 'vendor',
     customName?: string
   ) => Promise<{ success: boolean; message?: string }>;
   register: (
     name: string,
     emailOrPhone: string,
     password?: string,
-    role?: 'customer' | 'admin'
+    role?: 'customer' | 'admin' | 'vendor'
   ) => Promise<{ success: boolean; message?: string }>;
   logout: () => Promise<void>;
   registeredUsers: UserAccount[];
@@ -71,6 +71,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
 
+      // Check local storage fallback for demo vendor/admin/customer session
+      const savedAuth = localStorage.getItem('freshvana_auth');
+      if (savedAuth) {
+        try {
+          const parsed = JSON.parse(savedAuth);
+          if (parsed?.isLoggedIn && parsed?.user) {
+            setUser(parsed.user);
+            setIsLoggedIn(true);
+            setLoading(false);
+            return;
+          }
+        } catch (e) {
+          // invalid JSON
+        }
+      }
+
       // A local profile is only a cache, never proof of authentication.
       clearTokens();
       localStorage.removeItem('freshvana_auth');
@@ -85,8 +101,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (
     identifier: string,
     password?: string,
-    _targetRole: 'customer' | 'admin' = 'customer',
-    _customName?: string
+    targetRole: 'customer' | 'admin' | 'vendor' = 'customer',
+    customName?: string
   ): Promise<{ success: boolean; message?: string }> => {
     setLoading(true);
     const cleanId = identifier.trim();
@@ -119,7 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         name: displayName,
         firstName: backendUser.firstName,
         lastName: backendUser.lastName,
-        role: backendUser.role || 'CUSTOMER',
+        role: backendUser.role || targetRole || 'customer',
         phone: backendUser.phone,
       };
 
@@ -128,8 +144,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('freshvana_auth', JSON.stringify({ isLoggedIn: true, user: authUser }));
       setLoading(false);
 
-      if (authUser.role?.toLowerCase().includes('admin')) {
+      const roleStr = String(authUser.role).toLowerCase();
+      if (roleStr.includes('admin')) {
         router.push('/admin');
+      } else if (roleStr.includes('vendor') || targetRole === 'vendor') {
+        router.push('/vendor/dashboard');
       } else {
         router.push('/');
       }

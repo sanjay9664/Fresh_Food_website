@@ -25,8 +25,9 @@ function MainApp({ children }: { children: React.ReactNode }) {
 
   const isLoginPage = pathname === '/login';
   const isAdminPage = pathname?.startsWith('/admin');
+  const isVendorPage = pathname?.startsWith('/vendor');
   const isCheckoutPage = pathname === '/checkout';
-  const isMinimalPage = isLoginPage || isAdminPage;
+  const isMinimalPage = isLoginPage || isAdminPage || isVendorPage;
 
   return (
     <>

@@ -37,6 +37,7 @@ const normaliseProduct = (item: any): Product => {
     nutrition: item.nutrition || {},
     reviews: item.reviews || [],
     isAdded: item.isAdded ?? true,
+    isVendorUploaded: item.isVendorUploaded ?? Boolean(item.vendorId || item.vendorName || listings.length > 0),
   };
 };
 
@@ -58,6 +59,18 @@ export const fetchCatalog = createAsyncThunk('catalog/fetch', async (_, { reject
 
 const catalogSlice = createSlice({ name: 'catalog', initialState: { products: initialProducts as Product[], categories: initialCategories as Category[], loading: false, error: null as string | null, isRemote: false }, reducers: {
   addLocalProduct: (state, action: PayloadAction<Product>) => { state.products.unshift(action.payload); }, removeLocalProduct: (state, action: PayloadAction<string>) => { state.products = state.products.filter((item) => item.id !== action.payload); }, toggleLocalStock: (state, action: PayloadAction<string>) => { const item = state.products.find((row) => row.id === action.payload); if (item) item.inStock = !item.inStock; }, toggleLocalVisibility: (state, action: PayloadAction<string>) => { const item = state.products.find((row) => row.id === action.payload); if (item) item.isAdded = item.isAdded === false; }, addLocalCategory: (state, action: PayloadAction<Category>) => { state.categories.push(action.payload); }, removeLocalCategory: (state, action: PayloadAction<string>) => { state.categories = state.categories.filter((item) => item.id !== action.payload); }, resetCatalog: (state) => { state.products = initialProducts as Product[]; state.categories = initialCategories as Category[]; state.isRemote = false; },
-}, extraReducers: (builder) => builder.addCase(fetchCatalog.pending, (state) => { state.loading = true; state.error = null; }).addCase(fetchCatalog.fulfilled, (state, action) => { if (action.payload.products.length) state.products = action.payload.products; if (action.payload.categories.length) state.categories = action.payload.categories; state.loading = false; state.isRemote = true; }).addCase(fetchCatalog.rejected, (state, action) => { state.loading = false; state.error = String(action.payload || 'Catalog could not be loaded'); }) });
+}, extraReducers: (builder) => builder.addCase(fetchCatalog.pending, (state) => { state.loading = true; state.error = null; }).addCase(fetchCatalog.fulfilled, (state, action) => {
+  if (action.payload.products.length) {
+    // Keep local-only unavailable / non-vendor-uploaded products so they stay
+    // visible (grayed out) on the customer storefront even after the API loads.
+    const remoteIds = new Set(action.payload.products.map((p: Product) => p.id));
+    const localUnavailable = (initialProducts as Product[]).filter(
+      (p) => p.isVendorUploaded === false && !remoteIds.has(p.id)
+    );
+    state.products = [...action.payload.products, ...localUnavailable];
+  }
+  if (action.payload.categories.length) state.categories = action.payload.categories;
+  state.loading = false; state.isRemote = true;
+}).addCase(fetchCatalog.rejected, (state, action) => { state.loading = false; state.error = String(action.payload || 'Catalog could not be loaded'); }) });
 export const { addLocalProduct, removeLocalProduct, toggleLocalStock, toggleLocalVisibility, addLocalCategory, removeLocalCategory, resetCatalog } = catalogSlice.actions;
 export default catalogSlice.reducer;

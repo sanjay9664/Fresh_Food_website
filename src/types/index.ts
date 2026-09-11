@@ -53,6 +53,12 @@ export interface Product {
   isAdded?: boolean;
   /** Total stock published by the super admin, measured in kilograms. */
   stockQuantityKg?: number;
+  /** Vendor details & classification */
+  vendorId?: string;
+  vendorName?: string;
+  produceType?: 'Vegetable' | 'Fruit';
+  soldCount?: number;
+  isVendorUploaded?: boolean;
 }
 
 export interface Category {

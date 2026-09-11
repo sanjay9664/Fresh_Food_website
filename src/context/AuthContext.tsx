@@ -166,7 +166,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     name: string,
     emailOrPhone: string,
     password?: string,
-    _role: 'customer' | 'admin' = 'customer'
+    _role: 'customer' | 'admin' | 'vendor' = 'customer'
   ): Promise<{ success: boolean; message?: string }> => {
     setLoading(true);
     const cleanId = emailOrPhone.trim();

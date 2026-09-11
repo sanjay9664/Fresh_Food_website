@@ -5,7 +5,7 @@
 
 // Keep the versioned API base in one place. Override it per environment with
 // NEXT_PUBLIC_API_URL (for example: https://api.freshvana.com/api/v1).
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1').replace(/\/$/, '');
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1').replace(/\/$/, '');
 
 // Token Storage Keys
 const ACCESS_TOKEN_KEY = 'freshvana_access_token';

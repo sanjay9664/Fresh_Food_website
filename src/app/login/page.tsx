@@ -60,7 +60,8 @@ export default function LoginPage() {
         if (!res.success && res.message) {
           setErrorMessage(res.message);
         } else if (res.success) {
-          setSuccessMessage(res.message || 'Account created successfully! Please verify your email before signing in.');
+          setSuccessMessage('Account created successfully! You can now sign in immediately below.');
+          setIsRegister(false);
         }
       } else {
         const res = await login(

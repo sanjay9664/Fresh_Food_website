@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { Product } from '@/types';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
-import { Heart, Star, Eye, Plus, Minus, ShoppingBag } from 'lucide-react';
+import { Heart, Star, Eye, Plus, Minus, ShoppingBag, Ban } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface ProductCardProps {
@@ -23,6 +23,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
   const [selectedWeight, setSelectedWeight] = useState<string>(product.weights[0] || '1kg');
 
   const isWishlisted = isInWishlist(product.id);
+
+  // Vendor Upload & Stock Status Check
+  const isVendorUploaded = product.isVendorUploaded !== false && Boolean(product.vendorId || product.vendorName);
+  const remainingKg = remainingQuantityKg(product);
+  const isAvailable = isVendorUploaded && product.inStock && (remainingKg === undefined || remainingKg > 0);
+  const isSoldOut = !isAvailable;
 
   // Check if item is already in cart for this selected weight
   const cartItem = cart.find(
@@ -41,9 +47,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
 
   const currentPrice = Math.round(product.price * getMultiplier(selectedWeight));
   const currentOriginalPrice = Math.round(product.originalPrice * getMultiplier(selectedWeight));
-  const remainingKg = remainingQuantityKg(product);
-  const canAddSelectedWeight = product.inStock && remainingKg >= getMultiplier(selectedWeight);
-  const isSoldOut = !product.inStock || remainingKg <= 0;
+  const canAddSelectedWeight = isAvailable && remainingKg >= getMultiplier(selectedWeight);
 
   const handleMinus = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -68,9 +72,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!isAvailable) return;
     addToCart(product, selectedWeight, 1);
-    // Keep shoppers on the product grid so they can add multiple items quickly.
-    // The basket remains available from the bottom Cart tab / header icon.
   };
 
   const handleNavigateToDetails = () => {
@@ -79,14 +82,44 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
 
   return (
     <motion.div
-      whileHover={{ y: -6, boxShadow: '0 20px 40px rgba(10, 104, 54, 0.12)' }}
+      whileHover={isAvailable ? { y: -6, boxShadow: '0 20px 40px rgba(10, 104, 54, 0.12)' } : {}}
       transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-      className="product-card-v2 h-100 d-flex flex-column justify-content-between p-3 position-relative bg-white border shadow-sm"
-      style={{ borderRadius: '22px', borderColor: 'rgba(10, 104, 54, 0.1)' }}
+      className={`product-card-v2 h-100 d-flex flex-column justify-content-between p-3 position-relative border shadow-sm transition-all ${
+        !isAvailable ? 'bg-light opacity-85' : 'bg-white'
+      }`}
+      style={{
+        borderRadius: '22px',
+        borderColor: !isAvailable ? '#CBD5E1' : 'rgba(10, 104, 54, 0.1)',
+        filter: !isAvailable ? 'grayscale(0.9) contrast(0.92)' : 'none'
+      }}
     >
-      {/* Top Discount Badge */}
+      {/* Top Badges */}
       <div className="position-absolute top-0 start-0 m-3 d-flex flex-column gap-1 pointer-events-none" style={{ zIndex: 3 }}>
-        {product.discountPercentage > 0 && (
+        {!isVendorUploaded ? (
+          <span
+            className="badge fw-extrabold text-white px-2 py-1 shadow-sm"
+            style={{
+              background: 'linear-gradient(135deg, #64748B 0%, #475569 100%)',
+              borderRadius: '50px',
+              fontSize: '0.62rem',
+              letterSpacing: '0.4px'
+            }}
+          >
+            🚫 NOT UPLOADED
+          </span>
+        ) : !product.inStock || remainingKg <= 0 ? (
+          <span
+            className="badge fw-extrabold text-white px-2 py-1 shadow-sm"
+            style={{
+              background: 'linear-gradient(135deg, #EF4444 0%, #B91C1C 100%)',
+              borderRadius: '50px',
+              fontSize: '0.62rem',
+              letterSpacing: '0.4px'
+            }}
+          >
+            ⚠️ NOT AVAILABLE
+          </span>
+        ) : product.discountPercentage > 0 ? (
           <span
             className="badge fw-extrabold text-white px-2 py-1 shadow-sm"
             style={{
@@ -98,7 +131,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
           >
             {product.discountPercentage}% OFF
           </span>
-        )}
+        ) : null}
       </div>
 
       {/* Quick View Eye Button */}
@@ -120,8 +153,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
       <div
         onClick={handleNavigateToDetails}
         className="img-box rounded-4 mb-2 d-flex align-items-center justify-content-center overflow-hidden position-relative cursor-pointer"
-        style={{ height: '150px', background: '#F8FAF8' }}
+        style={{ height: '150px', background: !isAvailable ? '#E2E8F0' : '#F8FAF8' }}
       >
+        {!isAvailable && (
+          <div
+            className="position-absolute top-50 start-50 translate-middle bg-dark bg-opacity-80 text-white fw-extrabold px-3 py-1.5 rounded-pill text-nowrap shadow-sm z-3"
+            style={{ fontSize: '0.7rem', letterSpacing: '0.5px' }}
+          >
+            🚫 {isVendorUploaded ? 'OUT OF STOCK' : 'NOT AVAILABLE'}
+          </div>
+        )}
         <div className="w-100 h-100 d-flex align-items-center justify-content-center p-2">
           <Image
             src={product.image || '/images/carrots.png'}
@@ -132,6 +173,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
               (e.target as HTMLImageElement).src = '/images/carrots.png';
             }}
             className="object-fit-contain p-2 transition-all"
+            style={{ filter: !isAvailable ? 'grayscale(100%) opacity(0.65)' : 'none' }}
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
           />
         </div>
@@ -143,11 +185,46 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
           {/* Title (Clickable -> Product Details Page) */}
           <h6
             onClick={handleNavigateToDetails}
-            className="font-heading text-dark fw-extrabold mb-1 text-truncate hover-text-success text-center cursor-pointer"
+            className={`font-heading fw-extrabold mb-1 text-truncate hover-text-success text-center cursor-pointer ${
+              !isAvailable ? 'text-muted' : 'text-dark'
+            }`}
             style={{ fontSize: '0.92rem', letterSpacing: '-0.2px' }}
           >
             {product.name}
           </h6>
+
+          {/* Vendor Badge */}
+          <div className="d-flex align-items-center justify-content-center gap-1 mb-1">
+            {isVendorUploaded ? (
+              <span
+                className="badge fw-semibold px-2 py-1 rounded-pill text-truncate"
+                style={{
+                  fontSize: '0.64rem',
+                  backgroundColor: '#f0fdf4',
+                  color: '#15803d',
+                  border: '1px solid #bbf7d0',
+                  maxWidth: '92%'
+                }}
+                title={`Sold by ${product.vendorName || 'Green Earth Organic Farm'}`}
+              >
+                🌿 {product.vendorName || 'Green Earth Organic Farm'}
+              </span>
+            ) : (
+              <span
+                className="badge fw-semibold px-2 py-1 rounded-pill text-truncate"
+                style={{
+                  fontSize: '0.64rem',
+                  backgroundColor: '#F1F5F9',
+                  color: '#64748B',
+                  border: '1px solid #CBD5E1',
+                  maxWidth: '92%'
+                }}
+                title="Vendor not uploaded yet"
+              >
+                ❌ Vendor Not Uploaded
+              </span>
+            )}
+          </div>
 
           {/* Weight Unit Selector Pills */}
           <div className="d-flex align-items-center justify-content-center gap-1 mb-2 py-1 flex-wrap">
@@ -157,21 +234,25 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
                 <button
                   key={w}
                   type="button"
+                  disabled={!isAvailable}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    setSelectedWeight(w);
+                    if (isAvailable) setSelectedWeight(w);
                   }}
                   className={`btn btn-xs rounded-pill px-2 py-0 fw-bold transition-all ${
-                    isSelected
+                    !isAvailable
+                      ? 'btn-light text-muted border-0 opacity-50'
+                      : isSelected
                       ? 'btn-success text-white shadow-xs'
                       : 'btn-light text-muted border'
                   }`}
                   style={{
                     fontSize: '0.66rem',
                     lineHeight: '1.4',
-                    background: isSelected ? '#0A6836' : '#F1F5F9',
-                    borderColor: isSelected ? '#0A6836' : '#E2E8F0'
+                    background: !isAvailable ? '#E2E8F0' : isSelected ? '#0A6836' : '#F1F5F9',
+                    borderColor: isSelected && isAvailable ? '#0A6836' : '#E2E8F0',
+                    cursor: !isAvailable ? 'not-allowed' : 'pointer'
                   }}
                 >
                   {w}
@@ -183,14 +264,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
           {/* Rating */}
           <div className="d-flex align-items-center justify-content-center gap-1 text-warning mb-1" style={{ fontSize: '0.72rem' }}>
             {[1, 2, 3, 4, 5].map((s) => (
-              <Star key={s} size={11} fill="#FFB800" stroke="none" />
+              <Star key={s} size={11} fill={isAvailable ? '#FFB800' : '#CBD5E1'} stroke="none" />
             ))}
             <span className="text-muted ms-1 fw-semibold">({product.reviewsCount})</span>
           </div>
 
           {/* Price Display */}
           <div className="d-flex align-items-baseline justify-content-center gap-1 mb-1">
-            <span className="font-heading fs-5 fw-extrabold text-success" style={{ color: '#0A6836' }}>
+            <span className={`font-heading fs-5 fw-extrabold ${!isAvailable ? 'text-muted text-decoration-line-through' : 'text-success'}`} style={{ color: isAvailable ? '#0A6836' : '#64748B' }}>
               ₹{currentPrice * (cartItem ? cartItem.quantity : 1)}
             </span>
             {currentOriginalPrice > currentPrice && (
@@ -203,24 +284,48 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
           {/* View Full Details Button */}
           <Link
             href={`/product/${product.id}`}
-            className="btn btn-link p-0 text-success fw-bold text-decoration-none mb-2 d-inline-block"
-            style={{ fontSize: '0.72rem', color: '#0A6836' }}
+            className="btn btn-link p-0 text-decoration-none mb-2 d-inline-block fw-bold"
+            style={{ fontSize: '0.72rem', color: isAvailable ? '#0A6836' : '#64748B' }}
           >
-            👁️ View Full Details & Nutrition →
+            👁️ View Details →
           </Link>
         </div>
 
-        {Number.isFinite(remainingKg) && (
-          <small className={`d-block mb-2 fw-semibold ${isSoldOut ? 'text-danger' : 'text-success'}`}>
-            {isSoldOut ? 'Sold out' : `${remainingKg.toFixed(2).replace(/\.00$/, '')} kg available`}
+        {/* Stock Status Line */}
+        {!isVendorUploaded ? (
+          <small className="d-block mb-2 fw-bold text-secondary">
+            🚫 Vendor Not Uploaded
+          </small>
+        ) : !product.inStock || remainingKg <= 0 ? (
+          <small className="d-block mb-2 fw-bold text-danger">
+            ⚠️ Not Available (Out of Stock)
+          </small>
+        ) : (
+          <small className="d-block mb-2 fw-semibold text-success">
+            {remainingKg.toFixed(2).replace(/\.00$/, '')} kg available
           </small>
         )}
 
         {/* Action Row: Dynamic Add / Counter Pill + Wishlist Heart */}
         <div className="pt-2 border-top">
           <div className="d-flex align-items-center justify-content-between gap-2">
-            {/* Dynamic Button / Counter Pill */}
-            {cartItem ? (
+            {!isAvailable ? (
+              /* Disabled Button for Unavailable / Vendor Not Uploaded Items */
+              <button
+                type="button"
+                disabled
+                className="btn rounded-pill flex-grow-1 py-2 px-3 fw-extrabold d-flex align-items-center justify-content-center gap-1 border-0 text-white shadow-none"
+                style={{
+                  background: 'linear-gradient(135deg, #94A3B8 0%, #64748B 100%)',
+                  height: '38px',
+                  fontSize: '0.78rem',
+                  cursor: 'not-allowed'
+                }}
+              >
+                <Ban size={15} />
+                <span>{!isVendorUploaded ? 'NOT UPLOADED' : 'NOT AVAILABLE'}</span>
+              </button>
+            ) : cartItem ? (
               /* Item IN Cart: Solid Green Pill Counter [- qty +] */
               <div
                 className="d-flex align-items-center justify-content-between rounded-pill px-1 py-1 shadow-sm flex-grow-1"
@@ -283,7 +388,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
                 }}
               >
                 <Plus size={16} strokeWidth={3} />
-                <span>{isSoldOut ? 'SOLD OUT' : 'ADD TO CART'}</span>
+                <span>ADD TO CART</span>
               </button>
             )}
 

@@ -52,9 +52,11 @@ export default function ProductDetailPage() {
   const currentPrice = Math.round(product.price * getMultiplier(selectedWeight));
   const currentOriginalPrice = Math.round(product.originalPrice * getMultiplier(selectedWeight));
   const remainingKg = remainingQuantityKg(product);
-  const canAddSelectedWeight = product.inStock && remainingKg >= getMultiplier(selectedWeight);
+
+  const isVendorUploaded = product.isVendorUploaded !== false && Boolean(product.vendorId || product.vendorName);
+  const isAvailable = isVendorUploaded && product.inStock && (remainingKg === undefined || remainingKg > 0);
+  const canAddSelectedWeight = isAvailable && remainingKg >= getMultiplier(selectedWeight);
   const maxQuantity = Number.isFinite(remainingKg) ? Math.floor(remainingKg / getMultiplier(selectedWeight)) : Number.MAX_SAFE_INTEGER;
-  const isSoldOut = !product.inStock || remainingKg <= 0;
 
   return (
     <div className="py-5 bg-cream" style={{ paddingTop: '160px', minHeight: '85vh' }}>
@@ -75,8 +77,16 @@ export default function ProductDetailPage() {
             <div className="col-lg-5 text-center">
               <div
                 className="position-relative rounded-4 p-4 d-flex align-items-center justify-content-center overflow-hidden border"
-                style={{ background: '#F9FAF9', height: '340px' }}
+                style={{ background: !isAvailable ? '#E2E8F0' : '#F9FAF9', height: '340px', filter: !isAvailable ? 'grayscale(100%) opacity(0.7)' : 'none' }}
               >
+                {!isAvailable && (
+                  <div
+                    className="position-absolute top-50 start-50 translate-middle bg-dark bg-opacity-85 text-white fw-bold px-4 py-2 rounded-pill text-nowrap shadow-sm z-3"
+                    style={{ fontSize: '0.9rem', letterSpacing: '0.5px' }}
+                  >
+                    🚫 {!isVendorUploaded ? 'NOT UPLOADED BY VENDOR' : 'OUT OF STOCK'}
+                  </div>
+                )}
                 <Image
                   src={product.image}
                   alt={product.name}
@@ -91,7 +101,7 @@ export default function ProductDetailPage() {
             {/* Right Product Details */}
             <div className="col-lg-7">
               <div className="d-flex align-items-center justify-content-between mb-2">
-                <span className="badge bg-success bg-opacity-10 text-success fw-bold px-3 py-1 rounded-pill small">
+                <span className={`badge ${!isAvailable ? 'bg-secondary bg-opacity-25 text-dark' : 'bg-success bg-opacity-10 text-success'} fw-bold px-3 py-1 rounded-pill small`}>
                   {product.badge || '100% Organic'}
                 </span>
 
@@ -106,15 +116,28 @@ export default function ProductDetailPage() {
                 </button>
               </div>
 
-              <h2 className="font-heading display-6 fw-extrabold text-dark mb-2">
+              <h2 className={`font-heading display-6 fw-extrabold mb-2 ${!isAvailable ? 'text-muted' : 'text-dark'}`}>
                 {product.name}
               </h2>
+
+              {/* Vendor tag */}
+              <div className="mb-3">
+                {isVendorUploaded ? (
+                  <span className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3 py-1 fw-semibold small">
+                    🌿 Vendor: {product.vendorName || 'Green Earth Organic Farm'}
+                  </span>
+                ) : (
+                  <span className="badge bg-secondary bg-opacity-15 text-secondary border rounded-pill px-3 py-1 fw-bold small">
+                    ❌ Vendor Status: Not Uploaded Yet
+                  </span>
+                )}
+              </div>
 
               {/* Rating */}
               <div className="d-flex align-items-center gap-2 mb-3">
                 <div className="d-flex align-items-center text-warning">
                   {[1, 2, 3, 4, 5].map((s) => (
-                    <Star key={s} size={16} fill="#FFB800" stroke="none" />
+                    <Star key={s} size={16} fill={isAvailable ? '#FFB800' : '#CBD5E1'} stroke="none" />
                   ))}
                 </div>
                 <strong className="small text-dark font-heading">{product.rating}</strong>
@@ -123,7 +146,7 @@ export default function ProductDetailPage() {
 
               {/* Price */}
               <div className="d-flex align-items-baseline gap-3 mb-4">
-                <span className="font-heading display-5 fw-extrabold text-dark">
+                <span className={`font-heading display-5 fw-extrabold ${!isAvailable ? 'text-muted text-decoration-line-through' : 'text-dark'}`}>
                   ₹{currentPrice * quantity}
                 </span>
                 {currentOriginalPrice > currentPrice && (
@@ -131,19 +154,29 @@ export default function ProductDetailPage() {
                     ₹{currentOriginalPrice * quantity}
                   </span>
                 )}
-                <span className="badge bg-danger bg-opacity-10 text-danger fw-bold">
-                  {product.discountPercentage}% OFF
-                </span>
+                {isAvailable && product.discountPercentage > 0 && (
+                  <span className="badge bg-danger bg-opacity-10 text-danger fw-bold">
+                    {product.discountPercentage}% OFF
+                  </span>
+                )}
               </div>
 
               <p className="text-muted mb-4" style={{ lineHeight: 1.6 }}>
                 {product.description}
               </p>
-              {Number.isFinite(remainingKg) && (
-                <div className={`small fw-bold mb-3 ${isSoldOut ? 'text-danger' : 'text-success'}`}>
-                  {isSoldOut ? 'Currently sold out' : `${remainingKg.toFixed(2).replace(/\.00$/, '')} kg currently available`}
+              {!isVendorUploaded ? (
+                <div className="small fw-bold mb-3 text-secondary">
+                  🚫 Vendor has not uploaded stock for this product yet.
                 </div>
-              )}
+              ) : !isAvailable ? (
+                <div className="small fw-bold mb-3 text-danger">
+                  ⚠️ Currently sold out / out of stock
+                </div>
+              ) : Number.isFinite(remainingKg) ? (
+                <div className="small fw-bold mb-3 text-success">
+                  {remainingKg.toFixed(2).replace(/\.00$/, '')} kg currently available
+                </div>
+              ) : null}
 
               {/* Weight Selector */}
               <div className="mb-4">
@@ -155,9 +188,12 @@ export default function ProductDetailPage() {
                     <button
                       key={w}
                       type="button"
-                      onClick={() => setSelectedWeight(w)}
+                      disabled={!isAvailable}
+                      onClick={() => isAvailable && setSelectedWeight(w)}
                       className={`btn rounded-pill px-3 py-2 fw-semibold ${
-                        selectedWeight === w
+                        !isAvailable
+                          ? 'btn-light text-muted border-0 opacity-50'
+                          : selectedWeight === w
                           ? 'btn-success text-white shadow-sm'
                           : 'btn-light text-dark border'
                       }`}
@@ -174,6 +210,7 @@ export default function ProductDetailPage() {
                 <div className="d-flex align-items-center border rounded-pill px-3 py-2 bg-light">
                   <button
                     type="button"
+                    disabled={!isAvailable}
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     className="btn btn-sm btn-link p-0 text-dark border-0"
                   >
@@ -191,13 +228,15 @@ export default function ProductDetailPage() {
                 </div>
 
                 <button
-                  onClick={() => addToCart(product, selectedWeight, quantity)}
+                  onClick={() => isAvailable && addToCart(product, selectedWeight, quantity)}
                   disabled={!canAddSelectedWeight}
-                  className="btn btn-success btn-lg rounded-pill px-5 py-3 fw-bold d-flex align-items-center justify-content-center gap-2 shadow flex-grow-1 border-0"
-                  style={{ background: '#0A6836' }}
+                  className={`btn btn-lg rounded-pill px-5 py-3 fw-bold d-flex align-items-center justify-content-center gap-2 shadow flex-grow-1 border-0 ${
+                    !isAvailable ? 'btn-secondary opacity-75' : 'btn-success'
+                  }`}
+                  style={{ background: !isAvailable ? '#64748B' : '#0A6836' }}
                 >
                   <ShoppingBag size={20} />
-                  <span>Add {quantity} to Basket • ₹{currentPrice * quantity}</span>
+                  <span>{!isVendorUploaded ? 'NOT UPLOADED BY VENDOR' : !isAvailable ? 'NOT AVAILABLE (OUT OF STOCK)' : `Add ${quantity} to Basket • ₹${currentPrice * quantity}`}</span>
                 </button>
               </div>
 

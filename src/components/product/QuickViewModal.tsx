@@ -54,10 +54,13 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose
   const calculatedPrice = Math.round(product.price * getMultiplier(selectedWeight));
   const calculatedOriginalPrice = Math.round(product.originalPrice * getMultiplier(selectedWeight));
   const remainingKg = remainingQuantityKg(product);
-  const canAddSelectedWeight = product.inStock && remainingKg >= getMultiplier(selectedWeight);
-  const isSoldOut = !product.inStock || remainingKg <= 0;
+
+  const isVendorUploaded = product.isVendorUploaded !== false && Boolean(product.vendorId || product.vendorName);
+  const isAvailable = isVendorUploaded && product.inStock && (remainingKg === undefined || remainingKg > 0);
+  const canAddSelectedWeight = isAvailable && remainingKg >= getMultiplier(selectedWeight);
 
   const handleMinus = () => {
+    if (!isAvailable) return;
     if (cartItem) {
       if (cartItem.quantity > 1) {
         updateQuantity(product.id, selectedWeight, cartItem.quantity - 1);
@@ -70,6 +73,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose
   };
 
   const handlePlus = () => {
+    if (!isAvailable) return;
     if (cartItem) {
       updateQuantity(product.id, selectedWeight, cartItem.quantity + 1);
     } else {
@@ -78,6 +82,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose
   };
 
   const handleAddToCart = () => {
+    if (!isAvailable) return;
     if (cartItem) {
       updateQuantity(product.id, selectedWeight, cartItem.quantity + 1);
     } else {
@@ -117,17 +122,27 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose
               <div>
                 <div
                   className="position-relative rounded-4 overflow-hidden mb-3 shadow-sm bg-white"
-                  style={{ height: '280px', width: '100%' }}
+                  style={{ height: '280px', width: '100%', filter: !isAvailable ? 'grayscale(100%) opacity(0.7)' : 'none' }}
                 >
+                  {!isAvailable && (
+                    <div
+                      className="position-absolute top-50 start-50 translate-middle bg-dark bg-opacity-85 text-white fw-bold px-3 py-1.5 rounded-pill text-nowrap shadow-sm z-3"
+                      style={{ fontSize: '0.8rem', letterSpacing: '0.5px' }}
+                    >
+                      🚫 {!isVendorUploaded ? 'NOT UPLOADED BY VENDOR' : 'OUT OF STOCK'}
+                    </div>
+                  )}
                   <Image
                     src={currentImage}
                     alt={product.name}
                     fill
                     className="object-fit-contain p-3"
                   />
-                  <span className="position-absolute top-0 start-0 m-3 badge-discount-v2">
-                    {product.discountPercentage}% OFF
-                  </span>
+                  {isAvailable && product.discountPercentage > 0 && (
+                    <span className="position-absolute top-0 start-0 m-3 badge-discount-v2">
+                      {product.discountPercentage}% OFF
+                    </span>
+                  )}
                 </div>
 
                 {/* Circular Health Benefits Preview Bar */}
@@ -161,17 +176,30 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose
             <div className="col-md-7 p-4 p-md-5 d-flex flex-column justify-content-between">
               <div>
                 <div className="d-flex align-items-center justify-content-between mb-2">
-                  <span className="badge bg-success bg-opacity-15 text-success font-heading fw-bold px-3 py-1 rounded-pill">
+                  <span className={`badge ${!isAvailable ? 'bg-secondary bg-opacity-25 text-dark' : 'bg-success bg-opacity-15 text-success'} font-heading fw-bold px-3 py-1 rounded-pill`}>
                     {product.category}
                   </span>
                   <div className="d-flex align-items-center gap-1 text-warning fw-bold small">
-                    <Star size={15} fill="#FFB800" stroke="none" />
+                    <Star size={15} fill={isAvailable ? '#FFB800' : '#CBD5E1'} stroke="none" />
                     <span>{product.rating}</span>
                     <span className="text-muted fw-normal">({product.reviewsCount} reviews)</span>
                   </div>
                 </div>
 
-                <h3 className="font-heading fw-extrabold text-dark mb-2">{product.name}</h3>
+                <h3 className={`font-heading fw-extrabold mb-2 ${!isAvailable ? 'text-muted' : 'text-dark'}`}>{product.name}</h3>
+
+                {/* Vendor tag */}
+                <div className="mb-3">
+                  {isVendorUploaded ? (
+                    <span className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3 py-1 fw-semibold small">
+                      🌿 Vendor: {product.vendorName || 'Green Earth Organic Farm'}
+                    </span>
+                  ) : (
+                    <span className="badge bg-secondary bg-opacity-15 text-secondary border rounded-pill px-3 py-1 fw-bold small">
+                      ❌ Vendor Status: Not Uploaded Yet
+                    </span>
+                  )}
+                </div>
 
                 <p className="text-muted small mb-4" style={{ lineHeight: 1.5 }}>
                   {product.description}
@@ -179,7 +207,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose
 
                 {/* Price Display */}
                 <div className="d-flex align-items-baseline gap-3 mb-4 p-3 bg-light rounded-3 border">
-                  <span className="font-heading fs-3 fw-extrabold text-success">
+                  <span className={`font-heading fs-3 fw-extrabold ${!isAvailable ? 'text-muted text-decoration-line-through' : 'text-success'}`}>
                     ₹{calculatedPrice * currentQty}
                   </span>
                   {calculatedOriginalPrice > calculatedPrice && (
@@ -187,9 +215,11 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose
                       ₹{calculatedOriginalPrice * currentQty}
                     </span>
                   )}
-                  <span className="badge bg-danger ms-auto">
-                    {product.discountPercentage}% OFF
-                  </span>
+                  {!isAvailable && (
+                    <span className="badge bg-secondary ms-auto">
+                      NOT AVAILABLE
+                    </span>
+                  )}
                 </div>
 
                 {/* Weight Selector */}
@@ -201,9 +231,12 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose
                     {product.weights.map((w) => (
                       <button
                         key={w}
-                        onClick={() => setSelectedWeight(w)}
+                        disabled={!isAvailable}
+                        onClick={() => isAvailable && setSelectedWeight(w)}
                         className={`btn rounded-pill px-3 py-2 fw-semibold ${
-                          selectedWeight === w
+                          !isAvailable
+                            ? 'btn-light text-muted border-0 opacity-50'
+                            : selectedWeight === w
                             ? 'btn-success text-white shadow-sm'
                             : 'btn-outline-secondary'
                         }`}
@@ -221,6 +254,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose
                   <div className="d-flex align-items-center border rounded-pill px-3 py-1 bg-light">
                     <button
                       type="button"
+                      disabled={!isAvailable}
                       onClick={handleMinus}
                       className="btn btn-sm btn-light rounded-circle p-1 text-dark border-0 d-flex align-items-center justify-content-center"
                       style={{ width: '28px', height: '28px' }}
@@ -231,8 +265,8 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose
                     <span className="px-3 fw-bold small">{currentQty}</span>
                     <button
                       type="button"
-                      onClick={handlePlus}
                       disabled={!canAddSelectedWeight}
+                      onClick={handlePlus}
                       className="btn btn-sm btn-light rounded-circle p-1 text-dark border-0 d-flex align-items-center justify-content-center"
                       style={{ width: '28px', height: '28px' }}
                       title="Increase Quantity"
@@ -249,11 +283,13 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose
                   <button
                     onClick={handleAddToCart}
                     disabled={!canAddSelectedWeight}
-                    className="btn btn-success rounded-pill py-3 flex-grow-1 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm"
-                    style={{ background: cartItem ? '#064E28' : '#0A6836', border: 'none' }}
+                    className={`btn rounded-pill py-3 flex-grow-1 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm ${
+                      !isAvailable ? 'btn-secondary opacity-75' : 'btn-success'
+                    }`}
+                    style={{ background: !isAvailable ? '#64748B' : cartItem ? '#064E28' : '#0A6836', border: 'none' }}
                   >
                     <ShoppingBag size={18} />
-                    <span>{isSoldOut ? 'Sold out' : cartItem ? `In Basket (${currentQty}) • ₹${calculatedPrice * currentQty}` : `Add to Basket (₹${calculatedPrice * currentQty})`}</span>
+                    <span>{!isVendorUploaded ? 'NOT UPLOADED BY VENDOR' : !isAvailable ? 'NOT AVAILABLE (OUT OF STOCK)' : cartItem ? `In Basket (${currentQty}) • ₹${calculatedPrice * currentQty}` : `Add to Basket (₹${calculatedPrice * currentQty})`}</span>
                   </button>
 
                   <button

@@ -55,7 +55,7 @@ export default function AdminDashboardPage() {
     resetToDefaults
   } = useProducts();
 
-  const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'orders' | 'notifications' | 'system'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'vendors' | 'categories' | 'orders' | 'notifications' | 'system'>('products');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
   const [notifications, setNotifications] = useState<Array<{ id: string; title: string; message: string; audience: string; sentAt: string }>>([]);
@@ -63,6 +63,18 @@ export default function AdminDashboardPage() {
   const [notificationSuccess, setNotificationSuccess] = useState(false);
   const [orderFilter, setOrderFilter] = useState<'All' | 'Pending' | 'Out for Delivery' | 'Delivered'>('All');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Super Admin Multi-Vendor Dataset State ("super admin sab vendor ko dekh sake")
+  const [vendorsData, setVendorsData] = useState([
+    { id: 'vendor-1', name: 'Green Earth Organic Farm', email: 'vendoruser@marketplace.com', phone: '+91 98765 12345', vegCount: 4, fruitCount: 0, stockKg: 780, soldUnits: 695, revenue: 31275, isActive: true },
+    { id: 'vendor-2', name: 'Fresh Fruits Hub', email: 'fruits@freshvana.com', phone: '+91 98110 54321', vegCount: 0, fruitCount: 3, stockKg: 620, soldUnits: 1350, revenue: 180200, isActive: true },
+    { id: 'vendor-3', name: 'Surat Veggie Mart', email: 'surat.veg@freshvana.com', phone: '+91 98910 88776', vegCount: 3, fruitCount: 0, stockKg: 540, soldUnits: 580, revenue: 21975, isActive: true },
+    { id: 'vendor-4', name: 'Himalayan Orchards & Exotics', email: 'himalaya@freshvana.com', phone: '+91 99871 66554', vegCount: 2, fruitCount: 1, stockKg: 540, soldUnits: 380, revenue: 50950, isActive: true },
+  ]);
+
+  const toggleVendorActive = (vendorId: string) => {
+    setVendorsData(prev => prev.map(v => v.id === vendorId ? { ...v, isActive: !v.isActive } : v));
+  };
 
   // Frontend-only demo data. API data will replace this only when backend integration is requested.
   const orders = [
@@ -933,6 +945,217 @@ export default function AdminDashboardPage() {
                     );
                   })}
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ============================================================= */}
+        {/* TAB 1.5: VENDOR NETWORK & MASTER INVENTORY                    */}
+        {/* ============================================================= */}
+        {activeTab === 'vendors' && (
+          <div className="d-flex flex-column gap-4">
+            {/* Vendor Network Overview Cards */}
+            <div className="row g-3">
+              <div className="col-md-3">
+                <div className="admin-stat-card border-0 shadow-sm" style={{ backgroundColor: '#ffffff', borderRadius: '16px', padding: '1.25rem' }}>
+                  <div className="d-flex align-items-center gap-3">
+                    <div className="p-3 rounded-3" style={{ backgroundColor: '#eff6ff', color: '#2563eb' }}>
+                      <Store size={22} />
+                    </div>
+                    <div>
+                      <span className="text-muted small fw-semibold d-block">Active Vendors</span>
+                      <strong className="fs-4 text-dark font-heading">4 Registered</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-md-3">
+                <div className="admin-stat-card border-0 shadow-sm" style={{ backgroundColor: '#ffffff', borderRadius: '16px', padding: '1.25rem' }}>
+                  <div className="d-flex align-items-center gap-3">
+                    <div className="p-3 rounded-3" style={{ backgroundColor: '#f0fdf4', color: '#16a34a' }}>
+                      <Package size={22} />
+                    </div>
+                    <div>
+                      <span className="text-muted small fw-semibold d-block">Kita Mal Hai (Global Stock)</span>
+                      <strong className="fs-4 text-dark font-heading">2,480 kg/pcs</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-md-3">
+                <div className="admin-stat-card border-0 shadow-sm" style={{ backgroundColor: '#ffffff', borderRadius: '16px', padding: '1.25rem' }}>
+                  <div className="d-flex align-items-center gap-3">
+                    <div className="p-3 rounded-3" style={{ backgroundColor: '#faf5ff', color: '#9333ea' }}>
+                      <BarChart3 size={22} />
+                    </div>
+                    <div>
+                      <span className="text-muted small fw-semibold d-block">Kita Selling Hua (Revenue)</span>
+                      <strong className="fs-4 text-dark font-heading">₹2,84,390</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-md-3">
+                <div className="admin-stat-card border-0 shadow-sm" style={{ backgroundColor: '#ffffff', borderRadius: '16px', padding: '1.25rem' }}>
+                  <div className="d-flex align-items-center gap-3">
+                    <div className="p-3 rounded-3" style={{ backgroundColor: '#fff7ed', color: '#ea580c' }}>
+                      <Leaf size={22} />
+                    </div>
+                    <div>
+                      <span className="text-muted small fw-semibold d-block">Veg vs Fruit Listings</span>
+                      <strong className="fs-4 text-dark font-heading">8 Veg / 4 Fruit</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Vendor Network Overview Table ("super admin sab vendor ko dekh sake") */}
+            <div className="admin-card">
+              <div className="admin-card-header border-bottom">
+                <div className="admin-card-icon-sm green">
+                  <Store size={18} />
+                </div>
+                <div>
+                  <h5 className="admin-card-title mb-0">Registered Vendors Performance & Stock Overview</h5>
+                  <span className="admin-card-desc">Super Admin overview of stock, sales, and seller details per vendor</span>
+                </div>
+              </div>
+
+              <div className="table-responsive">
+                <table className="admin-table text-nowrap">
+                  <thead>
+                    <tr>
+                      <th>Vendor Farm & Contact</th>
+                      <th>Produce Listed</th>
+                      <th>Kita Mal Hai (Stock)</th>
+                      <th>Kita Bika (Sold Units)</th>
+                      <th>Sales Revenue (₹)</th>
+                      <th>Status</th>
+                      <th className="text-end">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {vendorsData.map((v) => (
+                      <tr key={v.id}>
+                        <td>
+                          <div className="d-flex align-items-center gap-2">
+                            <div className="rounded-circle bg-success bg-opacity-10 text-success p-2 font-heading fw-bold" style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              {v.name.charAt(0)}
+                            </div>
+                            <div>
+                              <strong className="d-block text-dark" style={{ fontSize: '0.92rem' }}>{v.name}</strong>
+                              <span className="text-muted small">{v.email} &bull; {v.phone}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span className="badge bg-light text-dark border px-2.5 py-1">
+                            🥦 {v.vegCount} Veg / 🍎 {v.fruitCount} Fruits
+                          </span>
+                        </td>
+                        <td>
+                          <strong className="text-dark font-heading">{v.stockKg} kg/pcs</strong>
+                        </td>
+                        <td>
+                          <span className="badge bg-info bg-opacity-10 text-info fw-bold px-2.5 py-1">
+                            {v.soldUnits} kg/pcs Sold
+                          </span>
+                        </td>
+                        <td>
+                          <strong className="text-success font-heading">₹{v.revenue.toLocaleString()}</strong>
+                        </td>
+                        <td>
+                          <span className={`badge px-2.5 py-1 rounded-pill ${v.isActive ? 'bg-success bg-opacity-15 text-success' : 'bg-secondary bg-opacity-15 text-secondary'}`}>
+                            {v.isActive ? 'Active Vendor' : 'Paused'}
+                          </span>
+                        </td>
+                        <td className="text-end">
+                          <button
+                            onClick={() => toggleVendorActive(v.id)}
+                            className="btn btn-sm btn-outline-secondary rounded-pill px-3"
+                          >
+                            {v.isActive ? 'Pause Account' : 'Activate'}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Master Produce Seller Directory ("kaun sa vendor bech raha hai") */}
+            <div className="admin-card">
+              <div className="admin-card-header border-bottom">
+                <div className="admin-card-icon-sm text-primary" style={{ backgroundColor: '#eff6ff' }}>
+                  <Package size={18} />
+                </div>
+                <div>
+                  <h5 className="admin-card-title mb-0">Master Produce Directory (All Vendors)</h5>
+                  <span className="admin-card-desc">Super Admin view of which vendor is selling what product and stock levels</span>
+                </div>
+              </div>
+
+              <div className="table-responsive">
+                <table className="admin-table text-nowrap">
+                  <thead>
+                    <tr>
+                      <th>Produce Item</th>
+                      <th>Seller Vendor</th>
+                      <th>Type & Category</th>
+                      <th>Price / Unit</th>
+                      <th>Stock Remaining</th>
+                      <th>Total Sold</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {allProducts.map((prod) => (
+                      <tr key={prod.id}>
+                        <td>
+                          <div className="d-flex align-items-center gap-2">
+                            <div className="admin-product-thumb">
+                              <Image src={prod.image} alt={prod.name} width={36} height={36} unoptimized className="object-fit-contain p-1" />
+                            </div>
+                            <strong className="text-dark" style={{ fontSize: '0.9rem' }}>{prod.name}</strong>
+                          </div>
+                        </td>
+                        <td>
+                          <span className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2.5 py-1 font-heading">
+                            🌿 {prod.vendorName || 'Green Earth Organic Farm'}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="d-flex align-items-center gap-1">
+                            <span className="badge bg-light text-dark border px-2 py-0.5" style={{ fontSize: '0.72rem' }}>
+                              {prod.produceType === 'Fruit' || prod.category.includes('Fruit') ? '🍎 Fruit' : '🥦 Veg'}
+                            </span>
+                            <span className="text-muted small">{prod.category}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <strong className="text-success">₹{prod.price} / kg</strong>
+                        </td>
+                        <td>
+                          <strong className="text-dark">{prod.stockQuantityKg || 120} kg</strong>
+                        </td>
+                        <td>
+                          <span className="text-info fw-bold">{prod.soldCount || 140} kg sold</span>
+                        </td>
+                        <td>
+                          <span className={`badge px-2.5 py-1 rounded-pill ${prod.inStock ? 'bg-success bg-opacity-15 text-success' : 'bg-danger bg-opacity-15 text-danger'}`}>
+                            {prod.inStock ? 'In Stock' : 'Out of Stock'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

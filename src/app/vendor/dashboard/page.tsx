@@ -31,10 +31,13 @@ import {
 interface VendorProduct {
   id: string;
   name: string;
+  type: 'Vegetable' | 'Fruit';
   category: string;
   price: number;
   unit: string;
   stock: number;
+  soldQuantity: number;
+  totalRevenue: number;
   status: 'In Stock' | 'Low Stock' | 'Out of Stock';
 }
 
@@ -57,19 +60,24 @@ export default function VendorDashboardPage() {
   // Add Product Modal state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newProdName, setNewProdName] = useState('');
-  const [newProdCategory, setNewProdCategory] = useState('Vegetables');
+  const [newProdType, setNewProdType] = useState<'Vegetable' | 'Fruit'>('Vegetable');
+  const [newProdCategory, setNewProdCategory] = useState('Leafy Greens');
   const [newProdPrice, setNewProdPrice] = useState('');
   const [newProdUnit, setNewProdUnit] = useState('kg');
   const [newProdStock, setNewProdStock] = useState('');
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
-  // Vendor product state
+  // Produce type filter ('all' | 'Vegetable' | 'Fruit')
+  const [produceFilter, setProduceFilter] = useState<'all' | 'Vegetable' | 'Fruit'>('all');
+
+  // Vendor product state (only this vendor's produce items)
   const [products, setProducts] = useState<VendorProduct[]>([
-    { id: 'vp-1', name: 'Fresh Organic Spinach (Palak)', category: 'Leafy Greens', price: 45, unit: 'kg', stock: 120, status: 'In Stock' },
-    { id: 'vp-2', name: 'Farm Fresh Tomatoes (Tomato)', category: 'Vegetables', price: 38, unit: 'kg', stock: 15, status: 'Low Stock' },
-    { id: 'vp-3', name: 'Hydroponic English Cucumbers', category: 'Salad Vegetables', price: 65, unit: 'kg', stock: 85, status: 'In Stock' },
-    { id: 'vp-4', name: 'Organic Red Onions', category: 'Vegetables', price: 50, unit: 'kg', stock: 0, status: 'Out of Stock' },
-    { id: 'vp-5', name: 'Fresh Green Capsicum', category: 'Vegetables', price: 75, unit: 'kg', stock: 40, status: 'In Stock' },
+    { id: 'vp-1', name: 'Fresh Organic Spinach (Palak)', type: 'Vegetable', category: 'Leafy Greens', price: 45, unit: 'kg', stock: 120, soldQuantity: 310, totalRevenue: 13950, status: 'In Stock' },
+    { id: 'vp-2', name: 'Farm Fresh Tomatoes (Tomato)', type: 'Vegetable', category: 'Vegetables', price: 38, unit: 'kg', stock: 15, soldQuantity: 280, totalRevenue: 10640, status: 'Low Stock' },
+    { id: 'vp-3', name: 'Royal Gala Red Apples', type: 'Fruit', category: 'Organic Fruits', price: 140, unit: 'kg', stock: 85, soldQuantity: 450, totalRevenue: 63000, status: 'In Stock' },
+    { id: 'vp-4', name: 'Organic Alphonso Mangoes', type: 'Fruit', category: 'Seasonal Fruits', price: 240, unit: 'kg', stock: 0, soldQuantity: 380, totalRevenue: 91200, status: 'Out of Stock' },
+    { id: 'vp-5', name: 'Fresh Green Capsicum', type: 'Vegetable', category: 'Vegetables', price: 75, unit: 'kg', stock: 40, soldQuantity: 110, totalRevenue: 8250, status: 'In Stock' },
+    { id: 'vp-6', name: 'Robusta Tree-Ripened Bananas', type: 'Fruit', category: 'Organic Fruits', price: 50, unit: 'kg', stock: 95, soldQuantity: 520, totalRevenue: 26000, status: 'In Stock' },
   ]);
 
   // Vendor order state
@@ -138,10 +146,13 @@ export default function VendorDashboardPage() {
     const newProduct: VendorProduct = {
       id: `vp-${Date.now()}`,
       name: newProdName.trim(),
+      type: newProdType,
       category: newProdCategory,
       price: priceNum,
       unit: newProdUnit,
       stock: stockNum,
+      soldQuantity: 0,
+      totalRevenue: 0,
       status: stockNum === 0 ? 'Out of Stock' : stockNum < 25 ? 'Low Stock' : 'In Stock',
     };
 
@@ -150,12 +161,13 @@ export default function VendorDashboardPage() {
     // Async attempt backend catalog creation
     catalogApi.createProduct({
       name: newProduct.name,
+      type: newProduct.type,
       category: newProduct.category,
       price: newProduct.price,
       stock: newProduct.stock
     }).catch(() => null);
 
-    setToastMsg(`"${newProduct.name}" added to catalog successfully!`);
+    setToastMsg(`"${newProduct.name}" (${newProduct.type}) added to catalog successfully!`);
     setTimeout(() => setToastMsg(null), 4000);
 
     // Reset form & close modal
@@ -170,10 +182,21 @@ export default function VendorDashboardPage() {
     o.customerName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredProducts = products.filter((p) =>
-    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredProducts = products.filter((p) => {
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          p.category.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType = produceFilter === 'all' || p.type === produceFilter;
+    return matchesSearch && matchesType;
+  });
+
+  // Calculate Vendor Specific Performance Metrics
+  const totalSoldUnits = products.reduce((acc, p) => acc + p.soldQuantity, 0);
+  const totalRevenueGenerated = products.reduce((acc, p) => acc + p.totalRevenue, 0);
+  const totalRemainingStock = products.reduce((acc, p) => acc + p.stock, 0);
+  const pendingOrdersCount = orders.filter((o) => o.status === 'Pending' || o.status === 'Packaging').length;
+  const deliveredOrdersCount = orders.filter((o) => o.status === 'Delivered').length;
+  const vegCount = products.filter((p) => p.type === 'Vegetable').length;
+  const fruitCount = products.filter((p) => p.type === 'Fruit').length;
 
   const cellDarkStyle: React.CSSProperties = {
     backgroundColor: '#111c38',
@@ -380,15 +403,15 @@ export default function VendorDashboardPage() {
               boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)'
             }}>
               <div className="d-flex align-items-center justify-content-between mb-2">
-                <span style={{ fontSize: '0.875rem', color: '#94a3b8', fontWeight: 600 }}>Today's Revenue</span>
+                <span style={{ fontSize: '0.875rem', color: '#94a3b8', fontWeight: 600 }}>Kita Bika (Sales Earned)</span>
                 <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <DollarSign size={22} color="#34d399" />
                 </div>
               </div>
               <div className="d-flex align-items-baseline justify-content-between">
-                <h2 className="fw-extrabold mb-0 text-white" style={{ letterSpacing: '-0.02em' }}>₹42,850</h2>
-                <span className="badge px-2 py-1" style={{ backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)', fontSize: '0.775rem' }}>
-                  +18.4% vs yesterday
+                <h2 className="fw-extrabold mb-0 text-white" style={{ letterSpacing: '-0.02em' }}>₹{totalRevenueGenerated.toLocaleString()}</h2>
+                <span className="badge px-2 py-1" style={{ backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)', fontSize: '0.75rem' }}>
+                  {totalSoldUnits} kg/pcs Sold
                 </span>
               </div>
             </div>
@@ -403,14 +426,37 @@ export default function VendorDashboardPage() {
               boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)'
             }}>
               <div className="d-flex align-items-center justify-content-between mb-2">
-                <span style={{ fontSize: '0.875rem', color: '#94a3b8', fontWeight: 600 }}>Pending Dispatch</span>
-                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Package size={22} color="#fbbf24" />
+                <span style={{ fontSize: '0.875rem', color: '#94a3b8', fontWeight: 600 }}>Kita Nahi Bika (Stock)</span>
+                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(59, 130, 246, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Boxes size={22} color="#60a5fa" />
                 </div>
               </div>
               <div className="d-flex align-items-baseline justify-content-between">
-                <h2 className="fw-extrabold mb-0 text-white" style={{ letterSpacing: '-0.02em' }}>14 Orders</h2>
-                <span className="badge px-2 py-1" style={{ backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', border: '1px solid rgba(245, 158, 11, 0.3)', fontSize: '0.775rem' }}>
+                <h2 className="fw-extrabold mb-0 text-white" style={{ letterSpacing: '-0.02em' }}>{totalRemainingStock} kg/pcs</h2>
+                <span className="badge px-2 py-1" style={{ backgroundColor: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.3)', fontSize: '0.75rem' }}>
+                  {products.length} Items Listed
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-xl-3 col-md-6">
+            <div style={{
+              background: 'linear-gradient(135deg, #111c38 0%, #0b1329 100%)',
+              borderRadius: '20px',
+              padding: '1.35rem 1.5rem',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)'
+            }}>
+              <div className="d-flex align-items-center justify-content-between mb-2">
+                <span style={{ fontSize: '0.875rem', color: '#94a3b8', fontWeight: 600 }}>Kite Pending (Dispatch)</span>
+                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Clock size={22} color="#fbbf24" />
+                </div>
+              </div>
+              <div className="d-flex align-items-baseline justify-content-between">
+                <h2 className="fw-extrabold mb-0 text-white" style={{ letterSpacing: '-0.02em' }}>{pendingOrdersCount} Orders</h2>
+                <span className="badge px-2 py-1" style={{ backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', border: '1px solid rgba(245, 158, 11, 0.3)', fontSize: '0.75rem' }}>
                   Action Needed
                 </span>
               </div>
@@ -426,38 +472,15 @@ export default function VendorDashboardPage() {
               boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)'
             }}>
               <div className="d-flex align-items-center justify-content-between mb-2">
-                <span style={{ fontSize: '0.875rem', color: '#94a3b8', fontWeight: 600 }}>Low Stock Warning</span>
-                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(239, 68, 68, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <AlertCircle size={22} color="#fca5a5" />
+                <span style={{ fontSize: '0.875rem', color: '#94a3b8', fontWeight: 600 }}>Produce Categories</span>
+                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(168, 85, 247, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <TrendingUp size={22} color="#c084fc" />
                 </div>
               </div>
               <div className="d-flex align-items-baseline justify-content-between">
-                <h2 className="fw-extrabold mb-0 text-white" style={{ letterSpacing: '-0.02em' }}>2 Items</h2>
-                <span className="badge px-2 py-1" style={{ backgroundColor: 'rgba(239, 68, 68, 0.15)', color: '#fca5a5', border: '1px solid rgba(239, 68, 68, 0.3)', fontSize: '0.775rem' }}>
-                  Needs Restock
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-xl-3 col-md-6">
-            <div style={{
-              background: 'linear-gradient(135deg, #111c38 0%, #0b1329 100%)',
-              borderRadius: '20px',
-              padding: '1.35rem 1.5rem',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)'
-            }}>
-              <div className="d-flex align-items-center justify-content-between mb-2">
-                <span style={{ fontSize: '0.875rem', color: '#94a3b8', fontWeight: 600 }}>Total Settled Earnings</span>
-                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(59, 130, 246, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <TrendingUp size={22} color="#60a5fa" />
-                </div>
-              </div>
-              <div className="d-flex align-items-baseline justify-content-between">
-                <h2 className="fw-extrabold mb-0 text-white" style={{ letterSpacing: '-0.02em' }}>₹3,84,500</h2>
-                <span className="badge px-2 py-1" style={{ backgroundColor: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.3)', fontSize: '0.775rem' }}>
-                  Bank Verified
+                <h2 className="fw-extrabold mb-0 text-white" style={{ letterSpacing: '-0.02em' }}>{vegCount} Veg / {fruitCount} Fruit</h2>
+                <span className="badge px-2 py-1" style={{ backgroundColor: 'rgba(168, 85, 247, 0.15)', color: '#c084fc', border: '1px solid rgba(168, 85, 247, 0.3)', fontSize: '0.75rem' }}>
+                  {deliveredOrdersCount} Delivered
                 </span>
               </div>
             </div>
@@ -787,13 +810,65 @@ export default function VendorDashboardPage() {
             boxShadow: '0 15px 35px rgba(0, 0, 0, 0.4)',
             overflow: 'hidden'
           }}>
-            <div className="p-4 d-flex align-items-center justify-content-between" style={{ backgroundColor: '#162244', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+            <div className="p-4 d-flex align-items-center justify-content-between flex-wrap gap-3" style={{ backgroundColor: '#162244', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
               <div>
                 <h4 className="fw-extrabold mb-1 text-white" style={{ letterSpacing: '-0.02em' }}>Vendor Inventory & Produce Catalog</h4>
-                <p className="mb-0" style={{ fontSize: '0.875rem', color: '#94a3b8' }}>Manage stock levels, price per kg, and batch availability</p>
+                <p className="mb-0" style={{ fontSize: '0.875rem', color: '#94a3b8' }}>Manage stock levels, price per kg, and view sold vs remaining stock</p>
               </div>
 
-              <div style={{ width: '320px' }} className="position-relative">
+              {/* Vegetables vs Fruits Filter Pill Buttons */}
+              <div className="d-flex align-items-center gap-2">
+                <button
+                  onClick={() => setProduceFilter('all')}
+                  style={{
+                    padding: '0.45rem 0.95rem',
+                    borderRadius: '50px',
+                    border: 'none',
+                    backgroundColor: produceFilter === 'all' ? '#10b981' : 'rgba(255, 255, 255, 0.08)',
+                    color: '#ffffff',
+                    fontSize: '0.825rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  All Produce ({products.length})
+                </button>
+                <button
+                  onClick={() => setProduceFilter('Vegetable')}
+                  style={{
+                    padding: '0.45rem 0.95rem',
+                    borderRadius: '50px',
+                    border: 'none',
+                    backgroundColor: produceFilter === 'Vegetable' ? '#10b981' : 'rgba(255, 255, 255, 0.08)',
+                    color: '#ffffff',
+                    fontSize: '0.825rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  🥦 Vegetables ({vegCount})
+                </button>
+                <button
+                  onClick={() => setProduceFilter('Fruit')}
+                  style={{
+                    padding: '0.45rem 0.95rem',
+                    borderRadius: '50px',
+                    border: 'none',
+                    backgroundColor: produceFilter === 'Fruit' ? '#10b981' : 'rgba(255, 255, 255, 0.08)',
+                    color: '#ffffff',
+                    fontSize: '0.825rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  🍎 Fruits ({fruitCount})
+                </button>
+              </div>
+
+              <div style={{ width: '280px' }} className="position-relative">
                 <Search size={16} color="#64748b" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
                 <input
                   type="text"
@@ -818,12 +893,14 @@ export default function VendorDashboardPage() {
               <table style={{ width: '100%', backgroundColor: '#111c38', borderCollapse: 'collapse', color: '#f8fafc' }}>
                 <thead>
                   <tr style={{ backgroundColor: '#0b1329', borderBottom: '1px solid rgba(255, 255, 255, 0.12)' }}>
-                    <th className="py-3.5 ps-4" style={thDarkStyle}>Produce Item Name</th>
-                    <th className="py-3.5" style={thDarkStyle}>Category</th>
+                    <th className="py-3.5 ps-4" style={thDarkStyle}>Produce Name</th>
+                    <th className="py-3.5" style={thDarkStyle}>Type & Category</th>
                     <th className="py-3.5" style={thDarkStyle}>Price / Unit</th>
-                    <th className="py-3.5" style={thDarkStyle}>Current Stock</th>
-                    <th className="py-3.5" style={thDarkStyle}>Availability Status</th>
-                    <th className="py-3.5 pe-4 text-end" style={thDarkStyle}>Quick Inventory Adjustment</th>
+                    <th className="py-3.5" style={thDarkStyle}>Kita Nahi Bika (Stock)</th>
+                    <th className="py-3.5" style={thDarkStyle}>Kita Bika (Sold)</th>
+                    <th className="py-3.5" style={thDarkStyle}>Revenue Earned</th>
+                    <th className="py-3.5" style={thDarkStyle}>Status</th>
+                    <th className="py-3.5 pe-4 text-end" style={thDarkStyle}>Stock Adjustment</th>
                   </tr>
                 </thead>
                 <tbody style={{ backgroundColor: '#111c38' }}>
@@ -831,9 +908,14 @@ export default function VendorDashboardPage() {
                     <tr key={prod.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
                       <td className="ps-4 py-3.5 fw-bold text-white" style={{ ...cellDarkStyle, fontSize: '0.95rem' }}>{prod.name}</td>
                       <td className="py-3.5" style={cellDarkStyle}>
-                        <span className="badge px-2.5 py-1.5" style={{ backgroundColor: 'rgba(255,255,255,0.08)', color: '#cbd5e1', border: '1px solid rgba(255,255,255,0.12)' }}>
-                          {prod.category}
-                        </span>
+                        <div className="d-flex align-items-center gap-1.5">
+                          <span className="badge px-2 py-1" style={{ backgroundColor: prod.type === 'Vegetable' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(244, 63, 94, 0.2)', color: prod.type === 'Vegetable' ? '#34d399' : '#fb7185', border: '1px solid rgba(255,255,255,0.15)', fontSize: '0.75rem', fontWeight: 700 }}>
+                            {prod.type === 'Vegetable' ? '🥦 Veg' : '🍎 Fruit'}
+                          </span>
+                          <span className="badge px-2 py-1" style={{ backgroundColor: 'rgba(255,255,255,0.08)', color: '#cbd5e1', fontSize: '0.75rem' }}>
+                            {prod.category}
+                          </span>
+                        </div>
                       </td>
                       <td className="py-3.5 fw-bold" style={{ ...cellDarkStyle, color: '#34d399', fontSize: '0.95rem' }}>
                         ₹{prod.price} / {prod.unit}
@@ -842,6 +924,14 @@ export default function VendorDashboardPage() {
                         <span className="fw-extrabold" style={{ color: prod.stock === 0 ? '#ef4444' : prod.stock < 25 ? '#f59e0b' : '#ffffff', fontSize: '0.95rem' }}>
                           {prod.stock} {prod.unit}
                         </span>
+                      </td>
+                      <td className="py-3.5" style={cellDarkStyle}>
+                        <span className="fw-extrabold text-info" style={{ color: '#38bdf8', fontSize: '0.95rem' }}>
+                          {prod.soldQuantity} {prod.unit}
+                        </span>
+                      </td>
+                      <td className="py-3.5 fw-bold" style={{ ...cellDarkStyle, color: '#34d399', fontSize: '0.95rem' }}>
+                        ₹{prod.totalRevenue.toLocaleString()}
                       </td>
                       <td className="py-3.5" style={cellDarkStyle}>
                         {prod.status === 'In Stock' && (
@@ -1062,6 +1152,56 @@ export default function VendorDashboardPage() {
 
             {/* Modal Form */}
             <form onSubmit={handleAddProductSubmit} className="p-4">
+              
+              {/* Produce Type Selector (Vegetable vs Fruit) */}
+              <div className="mb-3">
+                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.5rem', display: 'block' }}>
+                  Select Produce Type
+                </label>
+                <div className="d-flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewProdType('Vegetable');
+                      setNewProdCategory('Leafy Greens');
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '0.65rem',
+                      borderRadius: '12px',
+                      border: newProdType === 'Vegetable' ? '2px solid #10b981' : '1px solid rgba(255,255,255,0.15)',
+                      backgroundColor: newProdType === 'Vegetable' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(15, 23, 42, 0.6)',
+                      color: newProdType === 'Vegetable' ? '#34d399' : '#cbd5e1',
+                      fontWeight: 700,
+                      fontSize: '0.9rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    🥦 Vegetable
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewProdType('Fruit');
+                      setNewProdCategory('Organic Fruits');
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '0.65rem',
+                      borderRadius: '12px',
+                      border: newProdType === 'Fruit' ? '2px solid #f43f5e' : '1px solid rgba(255,255,255,0.15)',
+                      backgroundColor: newProdType === 'Fruit' ? 'rgba(244, 63, 94, 0.2)' : 'rgba(15, 23, 42, 0.6)',
+                      color: newProdType === 'Fruit' ? '#fb7185' : '#cbd5e1',
+                      fontWeight: 700,
+                      fontSize: '0.9rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    🍎 Fruit
+                  </button>
+                </div>
+              </div>
+
               <div className="mb-3">
                 <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.4rem', display: 'block' }}>
                   Produce / Crop Name
@@ -1071,7 +1211,7 @@ export default function VendorDashboardPage() {
                   required
                   value={newProdName}
                   onChange={(e) => setNewProdName(e.target.value)}
-                  placeholder="e.g. Organic Farm Fresh Carrots (Gajar)"
+                  placeholder={newProdType === 'Vegetable' ? "e.g. Organic Farm Fresh Spinach (Palak)" : "e.g. Royal Gala Red Apples"}
                   style={{
                     width: '100%',
                     padding: '0.75rem 1rem',
@@ -1104,11 +1244,24 @@ export default function VendorDashboardPage() {
                       outline: 'none'
                     }}
                   >
-                    <option value="Vegetables">Vegetables</option>
-                    <option value="Leafy Greens">Leafy Greens</option>
-                    <option value="Fruits">Fruits</option>
-                    <option value="Salad Vegetables">Salad Vegetables</option>
-                    <option value="Exotic Produce">Exotic Produce</option>
+                    {newProdType === 'Vegetable' ? (
+                      <>
+                        <option value="Leafy Greens">Leafy Greens</option>
+                        <option value="Vegetables">Fresh Vegetables</option>
+                        <option value="Root Vegetables">Root Vegetables</option>
+                        <option value="Organic Vegetables">Organic Vegetables</option>
+                        <option value="Salad Vegetables">Salad Vegetables</option>
+                        <option value="Exotic Veggies">Exotic Veggies</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="Organic Fruits">Organic Fruits</option>
+                        <option value="Citrus & Berries">Citrus & Berries</option>
+                        <option value="Exotic Fruits">Exotic Fruits</option>
+                        <option value="Seasonal Fruits">Seasonal Fruits</option>
+                        <option value="Tropical Fruits">Tropical Fruits</option>
+                      </>
+                    )}
                   </select>
                 </div>
 
@@ -1132,6 +1285,7 @@ export default function VendorDashboardPage() {
                   >
                     <option value="kg">kg</option>
                     <option value="500g">500g</option>
+                    <option value="250g">250g</option>
                     <option value="bunch">bunch</option>
                     <option value="pack">pack</option>
                     <option value="piece">piece</option>
